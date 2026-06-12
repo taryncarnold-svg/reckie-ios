@@ -17,14 +17,14 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { ActivityIndicator, Alert, Linking, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Linking, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { PressableScale } from '@/components/pressable-scale';
 import { CategoryTints, Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
-import { aspectRatioForCategory, CATEGORY_EMOJI } from '@/lib/categories';
+import { aspectRatioForCategory, CATEGORY_EMOJI, isLocationCategory } from '@/lib/categories';
 import {
   addCosign,
   deleteRec,
@@ -46,6 +46,7 @@ type OpenOptions = {
 };
 
 const POSTER_WIDTH = 210;
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const ReckieDetailContext = createContext<{ openReckie: (options: OpenOptions) => void }>({
   openReckie: () => {},
@@ -208,6 +209,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
       await setSaved(userId, rec, !saved);
       setSavedState(!saved);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notifyDataChanged();
       refresh();
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -298,7 +300,11 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
   };
 
   const imageUrl = rec ? getRecImageUrl(rec) : null;
+  const isPlace = rec ? isLocationCategory(rec.category) : false;
   const aspectRatio = rec ? aspectRatioForCategory(rec.category) : 2 / 3;
+  const posterWidth = isPlace ? SCREEN_WIDTH - 40 : POSTER_WIDTH;
+  const posterHeight = posterWidth / aspectRatio;
+  const heroHeight = isPlace ? posterHeight + 72 : 400;
   const score = rec ? externalScore(rec) : null;
   const context = rec ? contextLine(rec) : null;
   const otherCosigns = cosigns.filter((c) => c.user_id !== rec?.user_id);
@@ -322,9 +328,9 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
           showsVerticalScrollIndicator={false}>
           {rec && !composing && (
             <>
-              {/* Hero: blurred self-backdrop + native-shape poster (mockup left) */}
-              <View style={styles.heroZone}>
-                {imageUrl ? (
+              {/* Hero: blurred backdrop for media; full-width 4:3 for places */}
+              <View style={[styles.heroZone, { height: heroHeight }]}>
+                {imageUrl && !isPlace ? (
                   <>
                     <Image
                       source={{ uri: imageUrl }}
@@ -335,6 +341,8 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                     />
                     <View style={styles.heroBackdropDim} />
                   </>
+                ) : imageUrl && isPlace ? (
+                  <View style={styles.placeHeroBg} />
                 ) : (
                   <LinearGradient
                     colors={[CategoryTints[rec.category], '#36493D']}
@@ -355,8 +363,8 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                   />
                 </View>
 
-                <View style={styles.posterWrap}>
-                  <View style={[styles.poster, { width: POSTER_WIDTH, aspectRatio }]}>
+                <View style={[styles.posterWrap, isPlace && styles.posterWrapPlace]}>
+                  <View style={[styles.poster, { width: posterWidth, aspectRatio }]}>
                     {imageUrl ? (
                       <Image
                         source={{ uri: imageUrl }}
@@ -586,9 +594,12 @@ const styles = StyleSheet.create({
     height: 4,
   },
   heroZone: {
-    height: 400,
     position: 'relative',
     overflow: 'hidden',
+  },
+  placeHeroBg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#2A332E',
   },
   heroBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -630,6 +641,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 22,
     zIndex: 2,
+  },
+  posterWrapPlace: {
+    justifyContent: 'center',
+    paddingBottom: 16,
   },
   poster: {
     borderRadius: 14,

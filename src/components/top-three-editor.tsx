@@ -19,18 +19,15 @@ import { TOP_LIST_LABELS, saveTopList } from '@/lib/data';
 import { notifyDataChanged } from '@/lib/refresh';
 import { getRecImageUrl, type Category, type Rec, type TopListWithRecs } from '@/lib/types';
 
-export type TopEightEditorRef = {
-  /** Open the editor. Pass the existing list (if any) to edit it. */
-  present: (myRecs: Rec[], existing: TopListWithRecs[]) => void;
+export const TOP_THREE_MAX = 3;
+
+export type TopThreeEditorRef = {
+  present: (myRecs: Rec[], existing: TopListWithRecs[], startCategory?: Category) => void;
 };
 
 type Step = 'category' | 'rank';
 
-/**
- * Top 8 editor (PRODUCT.md §8): pick a category, then tap reckies in the
- * order you rank them. Tap order = rank; tap again to remove.
- */
-export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEditor(_props, ref) {
+export const TopThreeEditor = forwardRef<TopThreeEditorRef>(function TopThreeEditor(_props, ref) {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheetModal>(null);
@@ -38,17 +35,31 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
   const [step, setStep] = useState<Step>('category');
   const [myRecs, setMyRecs] = useState<Rec[]>([]);
   const [existing, setExisting] = useState<TopListWithRecs[]>([]);
-  const [category, setCategory] = useState<Category>('eat');
+  const [category, setCategory] = useState<Category>('watch');
   const [ranked, setRanked] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const pickCategory = useCallback(
+    (cat: Category) => {
+      setCategory(cat);
+      const current = existing.find((entry) => entry.list.category === cat);
+      setRanked(current ? current.recs.slice(0, TOP_THREE_MAX).map((rec) => rec.id) : []);
+      setStep('rank');
+    },
+    [existing]
+  );
+
   useImperativeHandle(ref, () => ({
-    present: (recs, lists) => {
+    present: (recs, lists, startCategory) => {
       setMyRecs(recs);
       setExisting(lists);
-      setStep('category');
       setError(null);
+      if (startCategory) {
+        pickCategory(startCategory);
+      } else {
+        setStep('category');
+      }
       sheetRef.current?.present();
     },
   }));
@@ -60,29 +71,23 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
     []
   );
 
-  // Only offer categories the user actually has reckies in.
   const categoryOptions = useMemo(() => {
     const counts = new Map<Category, number>();
     for (const rec of myRecs) counts.set(rec.category, (counts.get(rec.category) ?? 0) + 1);
-    return [...counts.entries()].map(([cat, count]) => ({
-      category: cat,
-      count,
-      hasList: existing.some((entry) => entry.list.category === cat),
-    }));
+    return [...counts.entries()]
+      .filter(([, count]) => count >= TOP_THREE_MAX)
+      .map(([cat, count]) => ({
+        category: cat,
+        count,
+        hasList: existing.some((entry) => entry.list.category === cat),
+      }));
   }, [myRecs, existing]);
-
-  const pickCategory = (cat: Category) => {
-    setCategory(cat);
-    const current = existing.find((entry) => entry.list.category === cat);
-    setRanked(current ? current.recs.map((rec) => rec.id) : []);
-    setStep('rank');
-  };
 
   const toggle = (recId: string) => {
     Haptics.selectionAsync();
     setRanked((prev) => {
       if (prev.includes(recId)) return prev.filter((id) => id !== recId);
-      if (prev.length >= 8) return prev;
+      if (prev.length >= TOP_THREE_MAX) return prev;
       return [...prev, recId];
     });
   };
@@ -154,8 +159,8 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
       handleIndicatorStyle={styles.handle}>
       {step === 'category' && (
         <BottomSheetView style={styles.content}>
-          <Text style={styles.title}>Your Top 8</Text>
-          <Text style={styles.subtitle}>Pick a category to rank. Ranking is identity.</Text>
+          <Text style={styles.title}>Your Top 3</Text>
+          <Text style={styles.subtitle}>Pick a category with 3+ reckies to rank your favorites.</Text>
           <View style={styles.categoryList}>
             {categoryOptions.map((option) => (
               <PressableScale
@@ -167,7 +172,7 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
                 <View style={styles.categoryTextWrap}>
                   <Text style={styles.categoryLabel}>{TOP_LIST_LABELS[option.category]}</Text>
                   <Text style={styles.categoryMeta}>
-                    {option.count} {option.count === 1 ? 'reckie' : 'reckies'}
+                    {option.count} reckies
                     {option.hasList ? ' · ranked' : ''}
                   </Text>
                 </View>
@@ -175,7 +180,9 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
               </PressableScale>
             ))}
             {categoryOptions.length === 0 && (
-              <Text style={styles.emptyText}>Add a few reckies first — then come rank them.</Text>
+              <Text style={styles.emptyText}>
+                Add at least 3 reckies in a category — then come rank your Top 3.
+              </Text>
             )}
           </View>
         </BottomSheetView>
@@ -188,11 +195,9 @@ export const TopEightEditor = forwardRef<TopEightEditorRef>(function TopEightEdi
               <PressableScale haptic="selection" onPress={() => setStep('category')} style={styles.backBtn}>
                 <Text style={styles.backText}>‹ Back</Text>
               </PressableScale>
-              <Text style={styles.stepTitle}>Top {TOP_LIST_LABELS[category]}</Text>
+              <Text style={styles.stepTitle}>Top 3 {TOP_LIST_LABELS[category]}</Text>
             </View>
-            <Text style={styles.rankHint}>
-              Tap in the order you rank them — first tap is #1. Up to 8.
-            </Text>
+            <Text style={styles.rankHint}>Tap in rank order — first tap is #1. Up to 3.</Text>
           </View>
           <BottomSheetFlatList
             data={candidates}
@@ -243,7 +248,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 24,
     color: Colors.ink,
   },
@@ -303,7 +308,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     flex: 1,
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink,
   },
@@ -340,7 +345,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.marigold,
   },
   rankBadgeText: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 13,
     color: '#fff',
   },

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reckie — Top 3 in section</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: #161616; font-family: 'Inter', sans-serif; padding: 44px 14px 90px; color: #fff; }
+  .intro { max-width: 820px; margin: 0 auto 32px; }
+  .intro h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 25px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .intro p { color: #a5a5a5; font-size: 14px; line-height: 1.6; }
+  .row { max-width: 820px; margin: 0 auto; display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+  .col { width: 380px; }
+  .cap { margin-bottom: 13px; }
+  .cap .nm { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin-bottom: 4px; }
+  .cap .ds { font-size: 12px; color: #9a9a9a; line-height: 1.5; }
+
+  .phone { width: 380px; border-radius: 38px; overflow: hidden; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); background:#FBFAF8; }
+  .scr { width:100%; background:#FBFAF8; padding-bottom:20px; }
+  .sb { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; color:#16140F; }
+  .wm { font-family:'Fraunces',serif; font-weight:600; font-size:21px; letter-spacing:-0.02em; color:#16140F; text-align:center; padding:2px 0 14px; }
+  .wm .dot{color:#8B3A2F;}
+
+  .ph { padding: 4px 22px 16px; display:flex; justify-content:space-between; align-items:flex-start; }
+  .ph .nm { font-family:'Fraunces',serif; font-weight:600; font-size:27px; letter-spacing:-0.025em; color:#16140F; }
+  .ph .hd { font-size:13px; color:#9C968D; margin-top:2px; }
+  .ph .pic { width:58px; height:58px; border-radius:50%; background:linear-gradient(150deg,#D8C0A8,#A88A6A); flex-shrink:0; }
+  .stats { display:flex; gap:26px; padding:0 22px 6px; }
+  .stats .s .n { font-family:'Fraunces',serif; font-weight:600; font-size:19px; color:#16140F; }
+  .stats .s .n.ox { color:#8B3A2F; }
+  .stats .s .l { font-size:11px; color:#9C968D; margin-top:1px; }
+
+  /* category section header */
+  .sec { display:flex; align-items:baseline; justify-content:space-between; padding:22px 22px 10px; }
+  .sec .l { font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#16140F; }
+  .sec .l .ct { color:#B9B2A6; margin-left:5px; }
+
+  /* the Top 3 feature block inside a section */
+  .top3 { margin: 0 22px 6px; }
+  .top3 .lbl { display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#B97D15; margin-bottom:10px; }
+  .top3 .lbl .more { margin-left:auto; color:#8B3A2F; font-weight:600; letter-spacing:0; text-transform:none; font-size:12px; }
+
+  /* TREATMENT A: compact rows */
+  .rowA { display:flex; align-items:center; gap:13px; padding:8px 0; border-bottom:0.5px solid #EEEAE1; }
+  .rowA:last-child{border-bottom:none;}
+  .rowA .rk { font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:#C9A24B; width:16px; }
+  .rowA .img { width:38px; height:54px; border-radius:7px; flex-shrink:0; }
+  .rowA .t { font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:#16140F; flex:1; line-height:1.1; }
+  .rowA .s { font-size:11px; color:#9C968D; }
+
+  /* TREATMENT B: podium */
+  .podium { display:flex; gap:10px; align-items:flex-end; }
+  .pod { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .pod .img { width:100%; border-radius:9px; }
+  .pod.p1 .img { aspect-ratio:2/3; background:linear-gradient(160deg,#5E7A6B,#36493D); }
+  .pod.p2 .img { aspect-ratio:2/3; background:linear-gradient(160deg,#7A6E8E,#3A2E4A); opacity:0.96; }
+  .pod.p3 .img { aspect-ratio:2/3; background:linear-gradient(160deg,#C0709A,#7A3A5A); opacity:0.96; }
+  .pod .rk { font-family:'Fraunces',serif; font-weight:700; font-size:15px; color:#C9A24B; margin:7px 0 2px; }
+  .pod .t { font-size:11.5px; font-weight:600; color:#16140F; text-align:center; line-height:1.15; }
+  .pod.p1 .img { transform: scale(1.0); }
+  .pod.p2 .img, .pod.p3 .img { transform: scale(0.92); }
+
+  /* normal catalogue row below, to show it stays scannable */
+  .scrollrow { display:flex; gap:11px; padding:6px 22px 4px; overflow-x:auto; }
+  .scrollrow::-webkit-scrollbar{display:none;}
+  .tile { flex:0 0 auto; width:96px; }
+  .tile .img { width:96px; aspect-ratio:2/3; border-radius:9px; }
+  .tile .t { font-size:12px; font-weight:600; color:#16140F; margin-top:6px; line-height:1.15; }
+  .tile .s { font-size:10.5px; color:#9C968D; }
+  .place .img { width:150px; aspect-ratio:4/3; border-radius:11px; }
+  .place { width:150px; }
+  .divider { height:0.5px; background:#ECEAE5; margin:14px 22px 0; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Top 3 — living inside its category, profile stays scannable</h1>
+  <p>Top 3 (not 8). A ranking lives <em>under its category header</em> as that section's crown — tap "See all" to expand — then the rest of the category flows normally below. The profile stays browsable even if every category has a Top 3. Left: compact ranked rows. Right: a little podium.</p>
+</div>
+
+<div class="row">
+
+  <!-- TREATMENT A -->
+  <div class="col">
+    <div class="cap"><div class="nm">A — Compact ranked rows</div><div class="ds">Three tight rows under the section header. Quiet, fast to read, tucks in neatly. Tap "See all" for the full ranked view.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="wm">Reckie<span class="dot">.</span></div>
+      <div class="ph"><div><div class="nm">Taryn</div><div class="hd">@taryn</div></div><div class="pic"></div></div>
+      <div class="stats"><div class="s"><div class="n ox">0</div><div class="l">co-signs earned</div></div><div class="s"><div class="n">14</div><div class="l">reckies</div></div></div>
+
+      <div class="sec"><div class="l">Watch <span class="ct">9</span></div></div>
+      <div class="top3">
+        <div class="lbl">★ Taryn's Top 3 <span class="more">See all ›</span></div>
+        <div class="rowA"><div class="rk">1</div><div class="img" style="background:linear-gradient(160deg,#5E7A6B,#36493D);"></div><div class="t">Friday Night Lights</div><div class="s">NBC</div></div>
+        <div class="rowA"><div class="rk">2</div><div class="img" style="background:linear-gradient(160deg,#7A6E8E,#3A2E4A);"></div><div class="t">Severance</div><div class="s">Apple TV+</div></div>
+        <div class="rowA"><div class="rk">3</div><div class="img" style="background:linear-gradient(160deg,#C0709A,#7A3A5A);"></div><div class="t">Parenthood</div><div class="s">NBC</div></div>
+      </div>
+      <div class="scrollrow">
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#6E8499,#3A4A5A);"></div><div class="t">The Bear</div><div class="s">FX</div></div>
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#B8985E,#7A6238);"></div><div class="t">Mad Men</div><div class="s">AMC</div></div>
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#8E6E5A,#4A3525);"></div><div class="t">Romy &amp; Michele</div><div class="s">film</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sec"><div class="l">Places <span class="ct">7</span></div></div>
+      <div class="scrollrow"><div class="place"><div class="img" style="background:linear-gradient(160deg,#C9A88E,#8A6A4E);"></div><div class="t">Los Angeles</div><div class="s">Do · Drink · Eat</div></div></div>
+    </div></div>
+  </div>
+
+  <!-- TREATMENT B -->
+  <div class="col">
+    <div class="cap"><div class="nm">B — Little podium</div><div class="ds">Three covers, #1 slightly larger, ranked beneath. More visual and flex-y — a glanceable "these are my three." Tap to expand.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="wm">Reckie<span class="dot">.</span></div>
+      <div class="ph"><div><div class="nm">Taryn</div><div class="hd">@taryn</div></div><div class="pic"></div></div>
+      <div class="stats"><div class="s"><div class="n ox">0</div><div class="l">co-signs earned</div></div><div class="s"><div class="n">14</div><div class="l">reckies</div></div></div>
+
+      <div class="sec"><div class="l">Watch <span class="ct">9</span></div></div>
+      <div class="top3">
+        <div class="lbl">★ Taryn's Top 3 <span class="more">See all ›</span></div>
+        <div class="podium">
+          <div class="pod p2"><div class="img"></div><div class="rk">2</div><div class="t">Severance</div></div>
+          <div class="pod p1"><div class="img"></div><div class="rk">1</div><div class="t">Friday Night Lights</div></div>
+          <div class="pod p3"><div class="img"></div><div class="rk">3</div><div class="t">Parenthood</div></div>
+        </div>
+      </div>
+      <div class="scrollrow" style="padding-top:12px;">
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#6E8499,#3A4A5A);"></div><div class="t">The Bear</div><div class="s">FX</div></div>
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#B8985E,#7A6238);"></div><div class="t">Mad Men</div><div class="s">AMC</div></div>
+        <div class="tile"><div class="img" style="background:linear-gradient(160deg,#8E6E5A,#4A3525);"></div><div class="t">Romy &amp; Michele</div><div class="s">film</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sec"><div class="l">Places <span class="ct">7</span></div></div>
+      <div class="scrollrow"><div class="place"><div class="img" style="background:linear-gradient(160deg,#C9A88E,#8A6A4E);"></div><div class="t">Los Angeles</div><div class="s">Do · Drink · Eat</div></div></div>
+    </div></div>
+  </div>
+
+</div>
+
+</body>
+</html>

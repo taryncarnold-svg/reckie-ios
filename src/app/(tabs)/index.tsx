@@ -10,8 +10,7 @@ import { CategorizedShelves } from '@/components/categorized-shelves';
 import { PressableScale } from '@/components/pressable-scale';
 import { useReckieDetail } from '@/components/reckie-detail-sheet';
 import { SectionHeading } from '@/components/section-heading';
-import { TopEight } from '@/components/top-eight';
-import { TopEightEditor, type TopEightEditorRef } from '@/components/top-eight-editor';
+import { TopThreeEditor, type TopThreeEditorRef } from '@/components/top-three-editor';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import {
@@ -23,8 +22,7 @@ import {
 } from '@/lib/data';
 import { useDataChanged } from '@/lib/refresh';
 import { supabase } from '@/lib/supabase';
-import { aspectRatioForCategory } from '@/lib/categories';
-import { getRecImageUrl, type Profile, type Rec, type TopListWithRecs } from '@/lib/types';
+import { getRecImageUrl, type Category, type Profile, type Rec, type TopListWithRecs } from '@/lib/types';
 
 /**
  * Home (PRODUCT.md §5): pulse + catalogue hybrid. A capped, calm pulse up top
@@ -43,7 +41,7 @@ export default function HomeScreen() {
   const [stamp, setStamp] = useState<CosignStamp | null>(null);
   const [topLists, setTopLists] = useState<TopListWithRecs[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const editorRef = useRef<TopEightEditorRef>(null);
+  const editorRef = useRef<TopThreeEditorRef>(null);
 
   const userId = session?.user.id;
 
@@ -91,44 +89,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={headerHeight} />
         }>
-        {/* ——— The pulse ——— */}
-        {pulse.length > 0 && (
-          <View style={styles.pulseSection}>
-            <SectionHeading title="The pulse" />
-            <View style={styles.pulseCard}>
-              {pulse.map((item, index) => (
-                <PulseRow
-                  key={item.id}
-                  item={item}
-                  last={index === pulse.length - 1}
-                  onPress={() => openReckie({ rec: item.rec, onChanged: load })}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* ——— Co-sign stamp: the one flourish ——— */}
-        {stamp && (
-          <PressableScale
-            style={styles.stamp}
-            haptic="light"
-            onPress={() => openReckie({ rec: stamp.rec, onChanged: load })}>
-            <View style={styles.stampFaces}>
-              {stamp.profiles.slice(0, 3).map((p, i) => (
-                <View key={p.id} style={[styles.stampFace, i > 0 && { marginLeft: -8 }]}>
-                  <Avatar profile={p} size={26} />
-                </View>
-              ))}
-            </View>
-            <Text style={styles.stampText} numberOfLines={2}>
-              <Text style={styles.stampCount}>{stamp.profiles.length} in your circle</Text> reckied{' '}
-              {stamp.title}
-            </Text>
-          </PressableScale>
-        )}
-
-        {/* ——— Profile header ——— */}
+        {/* ——— Profile header (you land here first) ——— */}
         <View style={styles.profileRow}>
           <View style={styles.profileText}>
             <Text style={styles.name} numberOfLines={1}>
@@ -157,34 +118,32 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ——— Top 8: leads the profile (PRODUCT.md §5) ——— */}
-        {topLists.length > 0 ? (
-          <View style={styles.topEights}>
-            {topLists.map((entry) => (
-              <TopEight
-                key={entry.list.id}
-                entry={entry}
-                onPressRec={(rec) => openReckie({ rec, onChanged: load })}
-                onEdit={() => editorRef.current?.present(myRecs, topLists)}
-              />
-            ))}
-          </View>
-        ) : myRecs.length >= 3 ? (
+        {/* ——— Co-sign stamp: the one flourish ——— */}
+        {stamp && (
           <PressableScale
-            style={styles.topEightInvite}
+            style={styles.stamp}
             haptic="light"
-            onPress={() => editorRef.current?.present(myRecs, topLists)}>
-            <View style={styles.inviteText}>
-              <Text style={styles.inviteTitle}>Rank your Top 8</Text>
-              <Text style={styles.inviteHint}>Your most shareable artifact. Takes a minute.</Text>
+            onPress={() => openReckie({ rec: stamp.rec, onChanged: load })}>
+            <View style={styles.stampFaces}>
+              {stamp.profiles.slice(0, 3).map((p, i) => (
+                <View key={p.id} style={[styles.stampFace, i > 0 && { marginLeft: -8 }]}>
+                  <Avatar profile={p} size={26} />
+                </View>
+              ))}
             </View>
-            <Text style={styles.inviteChevron}>›</Text>
+            <Text style={styles.stampText} numberOfLines={2}>
+              <Text style={styles.stampCount}>{stamp.profiles.length} in your circle</Text> reckied{' '}
+              {stamp.title}
+            </Text>
           </PressableScale>
-        ) : null}
+        )}
 
-        {/* ——— Catalogue ——— */}
+        {/* ——— Catalogue (Top 3 lives inside each section) ——— */}
         <CategorizedShelves
           recs={myRecs}
+          topLists={topLists}
+          profileName={displayName}
+          isOwnProfile
           selfLabel="you"
           emptyMessage="No reckies yet"
           emptyHint="Tap + and put your name on something good."
@@ -192,14 +151,37 @@ export default function HomeScreen() {
           onPressCity={(group) =>
             router.push({ pathname: '/city', params: { userId: userId!, city: group.city } })
           }
+          onSeeAllTop3={(category: Category) => editorRef.current?.present(myRecs, topLists, category)}
         />
+
+        {/* ——— Pulse: capped strip at the bottom ——— */}
+        {pulse.length > 0 && (
+          <View style={styles.pulseSection}>
+            <View style={styles.pulseHeader}>
+              <SectionHeading title="From your circle" />
+              <PressableScale haptic="selection" onPress={() => router.push('/(tabs)/circle')}>
+                <Text style={styles.pulseLink}>See all</Text>
+              </PressableScale>
+            </View>
+            <View style={styles.pulseCard}>
+              {pulse.map((item, index) => (
+                <PulseRow
+                  key={item.id}
+                  item={item}
+                  last={index === pulse.length - 1}
+                  onPress={() => openReckie({ rec: item.rec, onChanged: load })}
+                />
+              ))}
+            </View>
+          </View>
+        )}
 
         <PressableScale style={styles.signOut} haptic="selection" onPress={() => supabase.auth.signOut()}>
           <Text style={styles.signOutText}>Sign out</Text>
         </PressableScale>
       </ScrollView>
       <BlurHeader wordmark />
-      <TopEightEditor ref={editorRef} />
+      <TopThreeEditor ref={editorRef} />
     </View>
   );
 }
@@ -208,12 +190,10 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
   const imageUrl = getRecImageUrl(item.rec);
   const who = item.profile.name ?? item.profile.handle ?? 'Someone';
   const payoff = item.kind === 'cosign_payoff';
-  const thumbW = 40;
-  const thumbH = thumbW / aspectRatioForCategory(item.rec.category);
 
   return (
     <PressableScale style={[styles.pulseRow, !last && styles.pulseRowBorder]} haptic="light" onPress={onPress}>
-      <Avatar profile={item.profile} size={36} />
+      <Avatar profile={item.profile} size={32} />
       <View style={styles.pulseBody}>
         <Text style={styles.pulseText} numberOfLines={2}>
           <Text style={styles.pulseWho}>{who}</Text>
@@ -223,12 +203,7 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
         {payoff && <Text style={styles.payoffMark}>✺ your taste, traveling</Text>}
       </View>
       {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={[styles.pulseThumb, { width: thumbW, height: Math.min(thumbH, 52) }]}
-          contentFit="cover"
-          transition={150}
-        />
+        <Image source={{ uri: imageUrl }} style={styles.pulseThumb} contentFit="cover" transition={150} />
       ) : null}
     </PressableScale>
   );
@@ -240,7 +215,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paper,
   },
   pulseSection: {
-    marginBottom: 18,
+    marginTop: 28,
+    marginBottom: 8,
+  },
+  pulseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  pulseLink: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    color: Colors.oxblood,
   },
   pulseCard: {
     backgroundColor: Colors.paper,
@@ -252,8 +239,8 @@ const styles = StyleSheet.create({
   pulseRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    paddingVertical: 12,
+    gap: 10,
+    paddingVertical: 10,
   },
   pulseRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -283,6 +270,8 @@ const styles = StyleSheet.create({
     color: Colors.marigoldDeep,
   },
   pulseThumb: {
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: Colors.lineSoft,
   },
@@ -294,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   stampFaces: {
     flexDirection: 'row',
@@ -376,39 +365,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 12.5,
     color: Colors.ink2,
-  },
-  topEights: {
-    gap: 14,
-    marginBottom: 26,
-  },
-  topEightInvite: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.paper,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
-    borderRadius: Radii.lg,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 26,
-  },
-  inviteText: {
-    flex: 1,
-    gap: 2,
-  },
-  inviteTitle: {
-    fontFamily: Fonts.display,
-    fontSize: 17,
-    color: Colors.ink,
-  },
-  inviteHint: {
-    fontFamily: Fonts.sans,
-    fontSize: 12.5,
-    color: Colors.ink2,
-  },
-  inviteChevron: {
-    fontSize: 22,
-    color: Colors.ink3,
   },
   signOut: {
     alignSelf: 'center',

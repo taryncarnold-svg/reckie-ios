@@ -132,6 +132,32 @@ export async function setSaved(userId: string, rec: Pick<Rec, 'id' | 'canonical_
   }
 }
 
+export type SavedEntry = { rec: Rec; owner: Profile | null; saved_at: string };
+
+/** Saved tab list — explicit FK hint avoids PostgREST embed ambiguity. */
+export async function fetchSavedEntries(userId: string): Promise<SavedEntry[]> {
+  const { data, error } = await supabase
+    .from('saves')
+    .select('created_at, rec:recs(*, profiles!recs_user_id_fkey(*))')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as {
+    created_at: string;
+    rec: (Rec & { profiles: Profile | null }) | null;
+  }[];
+
+  const entries: SavedEntry[] = [];
+  for (const row of rows) {
+    if (!row.rec) continue;
+    const { profiles, ...rec } = row.rec;
+    entries.push({ rec: rec as Rec, owner: profiles, saved_at: row.created_at });
+  }
+  return entries;
+}
+
 export async function deleteRec(userId: string, recId: string): Promise<void> {
   // Defensive user_id filter, same as all web mutations.
   const { error } = await supabase.from('recs').delete().eq('id', recId).eq('user_id', userId);
@@ -339,7 +365,7 @@ export async function findCanonicalForExternal(
 }
 
 // ============================================================
-// Top 8 (PRODUCT.md §8): optional ranked lists, one per category
+// Top 3: optional ranked lists, one per category (max 3 items)
 // ============================================================
 
 export const TOP_LIST_LABELS: Record<Category, string> = {
@@ -352,8 +378,8 @@ export const TOP_LIST_LABELS: Record<Category, string> = {
   play: 'Games',
 };
 
-export function topListTitle(category: Category, count: number): string {
-  return `Top ${count} ${TOP_LIST_LABELS[category]}`;
+export function topListTitle(category: Category): string {
+  return `Top 3 ${TOP_LIST_LABELS[category]}`;
 }
 
 type TopListItemRow = { position: number; rec: Rec | null };
@@ -381,7 +407,7 @@ export async function fetchTopLists(userId: string): Promise<TopListWithRecs[]> 
   }
 
   return (lists as TopList[])
-    .map((list) => ({ list, recs: byList.get(list.id) ?? [] }))
+    .map((list) => ({ list, recs: (byList.get(list.id) ?? []).slice(0, 3) }))
     .filter((entry) => entry.recs.length > 0);
 }
 
@@ -399,7 +425,7 @@ export async function saveTopList(userId: string, category: Category, recIds: st
   const { data: list, error: listError } = await supabase
     .from('top_lists')
     .upsert(
-      { user_id: userId, category, title: topListTitle(category, recIds.length) },
+      { user_id: userId, category, title: topListTitle(category) },
       { onConflict: 'user_id,category' }
     )
     .select('id')
@@ -410,7 +436,7 @@ export async function saveTopList(userId: string, category: Category, recIds: st
   if (clearError) throw clearError;
 
   const { error: insertError } = await supabase.from('top_list_items').insert(
-    recIds.slice(0, 8).map((recId, index) => ({
+    recIds.slice(0, 3).map((recId, index) => ({
       list_id: list.id,
       reckie_id: recId,
       position: index + 1,
@@ -438,7 +464,7 @@ export type CosignStamp = { title: string; rec: Rec; profiles: Profile[] };
 
 export async function fetchPulse(
   userId: string,
-  cap = 6
+  cap = 3
 ): Promise<{ items: PulseItem[]; stamp: CosignStamp | null }> {
   const [activity, { data: cosignRows }] = await Promise.all([
     fetchFollowingActivity(userId, 12),

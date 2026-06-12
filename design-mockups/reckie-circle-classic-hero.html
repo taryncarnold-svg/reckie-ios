@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reckie — circle classic hero</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: #161616; font-family: 'Inter', sans-serif; padding: 44px 14px 90px; color: #fff; }
+  .intro { max-width: 440px; margin: 0 auto 32px; }
+  .intro h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .intro p { color: #a5a5a5; font-size: 14px; line-height: 1.6; }
+  .wrap { max-width: 440px; margin: 0 auto; }
+
+  .phone { width: 390px; margin:0 auto; border-radius: 38px; overflow: hidden; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); background:#FBFAF8; }
+  .scr { width:100%; background:#FBFAF8; padding-bottom:24px; }
+  .sb { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; color:#16140F; }
+  .hdr { padding: 6px 22px 4px; }
+  .hdr .t { font-family:'Fraunces',serif; font-weight:600; font-size:30px; letter-spacing:-0.025em; color:#16140F; }
+  .hdr .s { font-size:13px; color:#9C968D; margin-top:2px; }
+  .lens { display:flex; gap:8px; padding:14px 22px 4px; }
+  .lens .opt { padding:7px 15px; border-radius:30px; font-size:13.5px; font-weight:600; background:#fff; border:0.5px solid #E6E1D7; color:#6B6660; }
+  .lens .opt.on { background:#16140F; color:#fff; border-color:#16140F; }
+  .cats { display:flex; gap:8px; padding:12px 22px; overflow-x:auto; }
+  .cats::-webkit-scrollbar{display:none;}
+  .cat { flex-shrink:0; padding:7px 13px; border-radius:30px; font-size:13px; font-weight:500; background:#F1ECE3; border:0.5px solid #EBE7DE; color:#6B6660; }
+  .cat.on { background:#8B3A2F; color:#fff; border-color:#8B3A2F; }
+
+  .sec { padding: 14px 22px 10px; font-size:12px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#B97D15; display:flex; align-items:center; gap:6px; }
+
+  /* ELEVATED circle classic */
+  .classicWrap { padding: 0 22px 20px; position:relative; }
+  /* stacked-card edges behind */
+  .classicWrap::before { content:''; position:absolute; left:30px; right:30px; top:-7px; height:30px; background:#F3EADB; border:0.5px solid #E9DCC4; border-radius:16px; z-index:0; }
+  .classicWrap::after { content:''; position:absolute; left:26px; right:26px; top:-3px; height:30px; background:#F8F1E4; border:0.5px solid #EBDFC8; border-radius:16px; z-index:1; }
+  .classic { position:relative; z-index:2; border-radius:18px; overflow:hidden;
+    box-shadow: 0 0 0 1.5px #E7C77E, 0 8px 30px rgba(160,120,30,0.22); }
+  .classic .img { height:230px; background:linear-gradient(160deg,#5E7A6B,#36493D); position:relative; }
+  .classic .shade { position:absolute; inset:0; background:linear-gradient(to top, rgba(14,11,7,0.94), rgba(14,11,7,0.2) 55%, rgba(14,11,7,0.15)); }
+  .classic .seal { position:absolute; top:14px; left:14px; z-index:3; display:flex; align-items:center; gap:6px; background:rgba(217,154,43,0.95); color:#3A2A06; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:6px 12px; border-radius:30px; box-shadow:0 2px 10px rgba(160,110,20,0.4); }
+  .classic .seal .star { font-size:13px; }
+  .classic .cat-chip { position:absolute; top:14px; right:14px; z-index:3; background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); border:0.5px solid rgba(255,255,255,0.3); color:#fff; font-size:10.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; padding:5px 10px; border-radius:30px; }
+  .classic .body { position:absolute; bottom:0; left:0; right:0; z-index:3; padding:16px 18px; }
+  .classic .nm { font-family:'Fraunces',serif; font-weight:600; font-size:26px; color:#fff; letter-spacing:-0.015em; line-height:1.0; margin-bottom:10px; }
+  .classic .quote { font-size:13.5px; color:rgba(255,255,255,0.9); font-style:italic; margin-bottom:12px; line-height:1.35; }
+  .classic .who { display:flex; align-items:center; gap:10px; }
+  .classic .faces { display:flex; }
+  .classic .faces span { width:30px; height:30px; border-radius:50%; margin-left:-9px; border:2px solid rgba(255,255,255,0.85); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff; font-family:'Fraunces',serif; }
+  .classic .faces span:first-child{margin-left:0;}
+  .classic .wt { font-size:12.5px; color:#fff; font-weight:600; }
+  .classic .wt b { color:#F0D9A8; }
+
+  .item { display:flex; align-items:center; gap:13px; padding:11px 22px; border-bottom:0.5px solid #EFEBE2; }
+  .item .img { width:42px; height:60px; border-radius:8px; flex-shrink:0; }
+  .item .meat { flex:1; }
+  .item .t { font-family:'Fraunces',serif; font-weight:600; font-size:16px; color:#16140F; line-height:1.1; margin-bottom:2px; }
+  .item .who { font-size:12px; color:#9C968D; }
+  .item .vouch { font-size:11px; font-weight:600; color:#8B3A2F; background:#FBF0EE; padding:4px 9px; border-radius:20px; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Circle classic — elevated to hero</h1>
+  <p>Now it feels like many reckies stacked into one prized object: layered card edges behind it, a marigold seal, a glowing gold border, bigger celebratory faces, and a pulled "why" quote. This is the strongest signal in the app — it should stop you.</p>
+</div>
+
+<div class="wrap">
+  <div class="phone"><div class="scr">
+    <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+    <div class="hdr"><div class="t">Circle</div><div class="s">12 people · what they swear by</div></div>
+    <div class="lens"><div class="opt on">Browse</div><div class="opt">People</div></div>
+    <div class="cats">
+      <div class="cat on">All</div>
+      <div class="cat">🎬 Watch</div>
+      <div class="cat">🎧 Listen</div>
+      <div class="cat">📖 Read</div>
+      <div class="cat">📍 Places</div>
+    </div>
+
+    <div class="sec">★ Circle classic</div>
+    <div class="classicWrap">
+      <div class="classic">
+        <div class="img">
+          <div class="shade"></div>
+          <div class="seal"><span class="star">★</span> Loved by 4 of your circle</div>
+          <div class="cat-chip">🎬 Watch</div>
+          <div class="body">
+            <div class="nm">The Bear</div>
+            <div class="quote">"the most stressful, most beautiful show on tv."</div>
+            <div class="who">
+              <div class="faces"><span style="background:#8B3A2F;">C</span><span style="background:#6E7E8E;">M</span><span style="background:#7C8466;">B</span><span style="background:#B97D15;">J</span></div>
+              <div class="wt"><b>Cam, Mia, Brett & Jannah</b> swear by this</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="color:#9C968D;">Most loved right now</div>
+    <div class="item"><div class="img" style="background:linear-gradient(160deg,#4A465E,#1F1D2E);"></div><div class="meat"><div class="t">Severance</div><div class="who">Cam & Christina · Watch</div></div><div class="vouch">2 vouches</div></div>
+    <div class="item"><div class="img" style="background:linear-gradient(160deg,#C0473A,#7E2018);"></div><div class="meat"><div class="t">Changes</div><div class="who">Cam & Jannah · Listen</div></div><div class="vouch">2 vouches</div></div>
+  </div></div>
+</div>
+
+</body>
+</html>

@@ -1,10 +1,20 @@
 # DESIGN.md — Reckie
 
 The visual system, locked through mockup iteration. Pair with `PRODUCT.md` (architecture & behavior).
-Four approved mockups in `/design-mockups/` are the **literal visual targets** — match them, don't reinterpret:
-- `reckie-onboarding-v6.html` — the entrance
-- `reckie-editorial-refined.html` — action hierarchy on a reckie
-- `reckie-shapes-and-grid.html` — the detail screen + the catalogue grid (per-category image shapes)
+
+**v2 addendum:** Section 9 locks decisions from the first on-device review (March 2026).
+Where §9 conflicts with earlier sections, **§9 wins.**
+
+Six approved mockups in `/design-mockups/` are the **literal visual targets** — match them, don't reinterpret:
+
+| Mockup | What it locks |
+|--------|----------------|
+| `reckie-onboarding-v6.html` | The entrance (show-don't-tell cards, phone-first auth) |
+| `reckie-editorial-refined.html` | Action hierarchy on a reckie (Save-primary) |
+| `reckie-shapes-and-grid.html` | Detail screen (media) + catalogue horizontal grid |
+| `reckie-top3-in-section.html` | Top 3 nested in a category section (use **left/rows** treatment) |
+| `reckie-circle-browse.html` | Circle Browse lens with category pills |
+| `reckie-circle-classic-hero.html` | Circle classic hero (3+ overlap showstopper) |
 
 When prose here and a mockup ever disagree, **the mockup wins.** Build to the pixels.
 
@@ -37,8 +47,8 @@ clear focal point and action per screen, accents as punctuation.
 --oxblood-soft: #FBF0EE   tinted bg for save buttons / co-sign stamp
 --oxblood-line: #F0D9D5
 
---marigold:      #D99A2B   HIGHLIGHT — "yours" labels, Top-8 numbers, rare special beats
---marigold-deep: #B97D15
+--marigold:      #D99A2B   HIGHLIGHT — Top-3 rank numbers, "yours" labels, rare special beats
+--marigold-deep: #B97D15   Top-3 label, rank accent (#C9A24B for row numbers in mockup)
 ```
 
 Muted category tints (cover gradients when no art; all same low saturation):
@@ -86,10 +96,11 @@ eat / drink / do    4:3  landscape photo
 shop (products)     1:1  square
 ```
 In grids: horizontal scroll rows, each row using its category's ratio (see grid mockup).
-On the **detail screen**: the hero keeps the item's native shape — e.g. a 2:3 poster sits centered
-at ~210px wide on a **blurred, darkened, scaled-up copy of its own art** as the backdrop, so tall
-art never leaves dead space. Content rises in a `paper` sheet with a 24px top radius over the
-bottom of that backdrop.
+On the **detail screen (media — watch/read/listen/play):** the hero keeps the item's native shape — e.g. a 2:3 poster sits centered at ~210px wide on a **blurred, darkened, scaled-up copy of its own art** as the backdrop, so tall art never leaves dead space.
+
+On the **detail screen (places — eat/drink/do):** use a **full-width 4:3 hero** (~screen width minus margins). Do not use the centered poster + blur treatment — wide place photos look broken when squeezed into a small floating tile.
+
+Content rises in a `paper` sheet with a 24px top radius over the bottom of the backdrop.
 
 ---
 
@@ -141,17 +152,18 @@ with oxblood **Save** buttons (teaches the collect gesture pre-signup). Vary cat
 to show range + shapes. Auth: **phone-first** with an Email toggle, country-code field, dark primary
 "Get started", reassurance line. Spacing tight enough that the input sits comfortably, not exiled.
 
-### Co-sign stamp (signature delight — use sparingly)
+### Co-sign / vouch stamp (signature delight — use sparingly)
 Soft `--oxblood-soft` block, overlapping avatar faces, short line ("3 in your circle reckied X").
-The one flourish on Home/profile; don't repeat the treatment elsewhere.
+The one flourish on Home/profile; don't repeat the treatment elsewhere. UI copy uses **vouch**;
+DB table remains `cosigns`.
 
 ### Profile
-Photo, name (Fraunces), @handle, one-line taste bio. **Hero number = co-signs** (larger); reckies/
-cities secondary. Top 8 prominent if present. Sub-tabs (My reckies . Saved), then catalogue.
+Photo, name (Fraunces), @handle, one-line taste bio. **Hero number = vouches earned** (larger);
+reckies count secondary. **No full-width ranked blocks at the top** — Top 3 lives inside each
+category section (§9.1). Catalogue shelves follow. Saved is its own tab.
 
-### Top 8
-Clean ranked list: number (Fraunces, oxblood), thumbnail (native shape), title, drag handle.
-Header like "Top 8 . Must-Watch." A considered chart, not a cluttered grid.
+### Top 3 in-section (see §9.1 — do not build standalone Top 8 billboards)
+Compact ranked rows inside the category, not a marigold card at the top of the profile.
 
 ---
 
@@ -167,9 +179,9 @@ link (see PRODUCT.md section 10) — invisible to the user.
 ## 7. Motion
 
 Calm, physical, never bouncy/cartoonish (skews young). Press: scale 0.97-0.98 + slight opacity,
-~120ms. Sheets: native slide-up easing. Top-8 drag: tactile, satisfying — spend budget here.
+~120ms. Sheets: native slide-up easing. Top-3 rank editor: tactile tap-to-rank — spend budget here.
 Lineage payoff: a small earned beat (a settle, subtle marigold glow — not confetti). Haptics
-(expo-haptics) on save / tried-it / reckie-it / co-sign.
+(expo-haptics) on save / tried-it / reckie-it / vouch.
 
 ---
 
@@ -177,5 +189,52 @@ Lineage payoff: a small earned beat (a settle, subtle marigold glow — not conf
 
 cream/serif everywhere . pure #000 or cold #888 . the note as an italic pull-quote . dates on the
 reckie byline . evenly-spread accent color . heavy/material shadows . map as a nav tab . open
-comments (co-sign + one-line take only) . cropped/squished art (always native ratio) . bouncy
-motion . grain on more than one surface per screen.
+comments (vouch + one-line take only) . cropped/squished art (always native ratio) . bouncy
+motion . grain on more than one surface per screen . full-width Top 8/Top N billboard blocks at
+the top of profile (Top 3 in-section only).
+
+---
+
+## 9. v2 components (added after first build review — March 2026)
+
+New visual targets in `design-mockups/` (full index at top of this file):
+
+### 9.0 Home layout (profile-first)
+Open on **your profile + catalogue**. Pulse is a capped strip (~3 items) at the **bottom** of Home
+scroll with "See all → Circle" — never a wall of activity before your name. Vouch stamp (oxblood-soft)
+near the profile header when circle overlap exists.
+
+### 9.1 Top 3 in-section feature (match `reckie-top3-in-section.html`, left/rows treatment)
+Under a category header, when the category has 3+ reckies: a small label "★ [Name]'s Top 3" with a
+"See all >" link on the right, then **three compact rows**: marigold rank number (1/2/3, Fraunces),
+small native-shape thumbnail, title in Fraunces 600, tiny --ink-3 meta, hairline dividers between.
+Light — no heavy filled card. Below the three rows, the category's remaining items flow in the
+normal horizontal scroll grid. Never render full-width "ranked" billboard blocks at the top of the
+profile (removed).
+
+### 9.2 Circle Browse lens (match reckie-circle-browse)
+Circle tab header, then a two-option lens toggle **[Browse] [People]** (Browse = on by default:
+dark pill). Below it, horizontally-scrolling **category pills** (All / Watch / Listen / Read /
+Places / Play) — active pill is oxblood. Content rows below: native-shape thumbnail, Fraunces
+title, who-vouched line in --ink-3, and a "N vouches" chip (oxblood on --oxblood-soft) on the right
+for multi-vouch items. Most-vouched sorts to top.
+
+### 9.3 Circle classic hero (match reckie-circle-classic-hero)
+The overlap showstopper, at the top of Browse when 3+ people reckied a thing:
+- layered card edges peeking behind (two offset --paper rectangles) = "stacked reckies"
+- the card: 18px radius, **glowing gold border** (`box-shadow: 0 0 0 1.5px #E7C77E` + soft amber
+  drop shadow), full-bleed image with a bottom-up dark gradient
+- marigold **seal** top-left: "★ Loved by N of your circle" (amber pill, small shadow)
+- category chip top-right (glassy)
+- title Fraunces 600 ~26px white; a pulled italic "why" quote (one of the takes); then a row of
+  big white-ringed avatar faces + "Cam, Mia, Brett & Jannah swear by this" (names bold, --marigold
+  tint on the highlight)
+- This is the ONE place the app goes big and celebratory. It earns it — strongest signal in the app.
+- Rows for 2-vouch items just get the small "N vouches" chip; reserve the hero for 3+.
+
+### 9.4 Vouches (UI copy)
+"Co-signs" → **vouches** in all user-facing copy. Profile hero: "vouches earned." The save/vouch
+chip uses --oxblood on --oxblood-soft. Technical/DB name stays `cosigns`.
+
+### 9.5 Place detail hero
+Full-width 4:3 landscape image for eat/drink/do detail sheets. See §3 and PRODUCT.md §14.6.

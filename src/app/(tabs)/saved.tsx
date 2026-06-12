@@ -12,13 +12,9 @@ import { SegmentedTabs } from '@/components/segmented-tabs';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { CATEGORY_EMOJI, isLocationCategory, normalizeCityKey } from '@/lib/categories';
-import { fetchTriedByKey, markTried, unmarkTried } from '@/lib/data';
+import { fetchSavedEntries, fetchTriedByKey, markTried, unmarkTried } from '@/lib/data';
 import { notifyDataChanged, useDataChanged } from '@/lib/refresh';
-import { supabase } from '@/lib/supabase';
-import { canonicalKeyForRec, getRecImageUrl, type Profile, type Rec, type Tried } from '@/lib/types';
-
-type SavedEntry = { rec: Rec; owner: Profile | null };
-type SavedRow = { rec: (Rec & { owner: Profile | null }) | null };
+import { canonicalKeyForRec, getRecImageUrl, type Rec, type Tried } from '@/lib/types';
 
 /**
  * Saved (PRODUCT.md §5): the to-do list of your taste life. Filterable by
@@ -30,7 +26,7 @@ export default function SavedScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { openReckie } = useReckieDetail();
 
-  const [entries, setEntries] = useState<SavedEntry[]>([]);
+  const [entries, setEntries] = useState<Awaited<ReturnType<typeof fetchSavedEntries>>>([]);
   const [triedByKey, setTriedByKey] = useState<Map<string, Tried>>(new Map());
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -40,25 +36,15 @@ export default function SavedScreen() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const [{ data }, tried] = await Promise.all([
-      supabase
-        .from('saves')
-        .select('rec:recs(*, owner:profiles(*))')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false }),
-      fetchTriedByKey(userId),
-    ]);
-
-    const rows = (data ?? []) as unknown as SavedRow[];
-    const next: SavedEntry[] = [];
-    for (const row of rows) {
-      if (!row.rec) continue;
-      const { owner, ...rec } = row.rec;
-      next.push({ rec: rec as Rec, owner });
+    try {
+      const [saved, tried] = await Promise.all([fetchSavedEntries(userId), fetchTriedByKey(userId)]);
+      setEntries(saved);
+      setTriedByKey(tried);
+    } catch {
+      setEntries([]);
+    } finally {
+      setLoaded(true);
     }
-    setEntries(next);
-    setTriedByKey(tried);
-    setLoaded(true);
   }, [userId]);
 
   useEffect(() => {
@@ -73,7 +59,6 @@ export default function SavedScreen() {
     setRefreshing(false);
   }, [load]);
 
-  // Filter pills: All, then each city, then each non-place category present.
   const filterOptions = useMemo(() => {
     const cities = new Map<string, string>();
     const categories = new Map<string, string>();
@@ -108,11 +93,19 @@ export default function SavedScreen() {
     if (!userId) return;
     const key = canonicalKeyForRec(rec);
     const wasTried = triedByKey.has(key);
-    // optimistic
     setTriedByKey((prev) => {
       const next = new Map(prev);
       if (wasTried) next.delete(key);
-      else next.set(key, { id: 'optimistic', user_id: userId, reckie_id: rec.id, canonical_id: key, private_note: null, loved: null, tried_at: new Date().toISOString() });
+      else
+        next.set(key, {
+          id: 'optimistic',
+          user_id: userId,
+          reckie_id: rec.id,
+          canonical_id: key,
+          private_note: null,
+          loved: null,
+          tried_at: new Date().toISOString(),
+        });
       return next;
     });
     try {

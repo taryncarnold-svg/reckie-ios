@@ -4,6 +4,9 @@ The source of truth for what Reckie is, how it behaves, and what we build first.
 Pair this with `DESIGN.md` (the visual system). When the two are silent on a detail,
 favor the simplest thing that serves **the flywheel** described below.
 
+**v2 addendum:** Section 14 locks decisions from the first on-device review (March 2026).
+Where §14 conflicts with earlier sections, **§14 wins.**
+
 ---
 
 ## 1. What Reckie is
@@ -48,7 +51,7 @@ The four psychological drivers we are deliberately engineering for:
    the strongest driver in the app. Lineage + the payoff moment serve it.
 2. **"Here's my two cents."** People love to chime in. Co-signs with a one-line take serve it,
    safely (no open comments).
-3. **"Rank my favorites."** Ranking is identity and is compulsive. Optional Top 8 serves it.
+3. **"Rank my favorites."** Ranking is identity and is compulsive. Optional Top 3 per category serves it.
 4. **"Remember my life."** People want a log of what they did and felt. The private log
    (byproduct of "tried it") serves it.
 
@@ -119,10 +122,11 @@ The "tried it" state — the heart of the loop. Also the seed of the private lif
 v1 keeps this lightweight: tried + optional private note + optional "loved". The richer
 life-log (who-with, when, feeling) layers on later — same table, more columns.
 
-### top_lists  (the optional Top 8)
-- `id`, `user_id`, `category`, `title` (e.g. "Top 8 Must-Watch")
-- ordered list of `reckie_id`s (join table `top_list_items` with `position`)
-- optional; only offered once a user has 8+ in a category
+### top_lists  (optional Top 3 per category)
+- `id`, `user_id`, `category`, `title` (e.g. "Top 3 Must-Watch")
+- ordered list of `reckie_id`s (join table `top_list_items` with `position`, max **3**)
+- optional; only offered once a user has **3+** reckies in that category
+- displayed **inside** the category section on profile/Home, not as a standalone block (see §14.2)
 
 ### circles / circle_members
 As they exist today. A reckie's visibility is scoped to the user's circle(s).
@@ -144,25 +148,25 @@ Bottom tab bar, five slots:
 
 ## 5. The screens
 
-### Home (hybrid — pulse + catalogue)
-The return-driver. Two zones, top to bottom:
+### Home (hybrid — catalogue + pulse)
+The return-driver. **Profile first** — you land on yourself, not a feed wall:
 
-**The pulse** (top): a quiet, high-signal strip of recent circle activity. Capped (≈3–6 items),
-calm, never an infinite feed. **Only reckies and co-signs hit the pulse — never saves or browses.**
-Examples: "Camden reckied a place in LA," "3 of your circle reckied The Bear this week,"
-"Your Sushi Park reckie was co-signed by Steve." The "your taste traveled" payoffs surface here.
-
-**Your catalogue** (below): essentially the Me page — profile header, then your reckies organized
-into Places (city cards), then Watch/Read/Play/Shop. Self-expression lives here, one scroll down.
+1. **Your catalogue** (primary): profile header, vouch hero number, then reckies organized into
+   Places (city cards), then Watch / Listen / Read / Play shelves. Top 3 ranked lists live *inside*
+   each category section (§14.2), not as blocks at the top.
+2. **The pulse** (secondary, bottom of scroll): a quiet, capped strip (≈3 items) of recent circle
+   activity, with "See all → Circle." Never a long activity list before your profile. **Only reckies
+   and vouches hit the pulse — never saves or browses.** Examples: "Camden reckied a place in LA,"
+   "Your Sushi Park reckie was vouched by Steve." Payoff moments surface here and in notifications.
 
 ### Profile / Me
 Order matters — lead with identity and proof, not vanity stats:
 1. **photo**, name, **handle**, **one-line taste bio**
-2. **hero number: co-signs** (how many people backed your reckies) — the thing you chase.
+2. **hero number: vouches earned** (how many people backed your reckies) — the thing you chase.
    Other counts (reckies, cities) are secondary, smaller.
-3. **Top 8** (if they have one) — the signature shareable artifact, shown prominently
-4. then the catalogue (Places, Watch, etc.)
-5. sub-tabs: **My reckies · Saved**
+3. **the catalogue** (Places, Watch, etc.) — Top 3 ranked lists appear *inside* each category
+   section when that category has 3+ reckies (§14.2). No full-width ranked blocks at the top.
+4. Saved lives on its own tab (not a profile sub-tab in the native app).
 
 ### The reckie object (detail) — a co-signable stack
 This is the most important screen to get right. A reckie is a **collectible co-sign object**:
@@ -223,14 +227,17 @@ A view inside Places. Pins for location reckies, tap → the reckie object.
 
 ---
 
-## 8. Top 8 (optional ranked lists)
+## 8. Top 3 (optional ranked lists)
 
-- Offered once a user has **8+ reckies in a category**.
-- Drag-to-rank, tactile, a little addictive (the compulsive return loop Beli proved out).
-- Category-scoped: "Top 8 Restaurants," "Top 5 Must-Watch."
+> **Superseded in UI by §14.2.** Top 8 is retired — 3 items max, nested in category sections.
+
+- Offered once a user has **3+ reckies in a category**.
+- Tap-to-rank (order of taps = rank), tactile, a little addictive.
+- Category-scoped: "Top 3 Must-Watch," "Top 3 Restaurants."
 - **Optional** — never forced; forcing it kills it.
-- A user's Top 8 is their most shareable artifact — leads the profile, goes in bios, is the
-  natural unit a public/influencer profile is built around later.
+- A user's Top 3 is their most shareable artifact per category — compact enough to live inside
+  the catalogue without bloating the profile. The natural unit a public/influencer profile is
+  built around later.
 
 ---
 
@@ -283,7 +290,7 @@ An empty Reckie is useless. The first session must end with the app already feel
 - Saved (circle-visible, filterable, "I tried this" action)
 - Circle list
 - the lineage payoff moment (at least in the pulse + a notification)
-- optional Top 8
+- optional Top 3 (in-section)
 - Map as a view inside Places
 
 **Deferred (schema-ready, not built):**
@@ -302,7 +309,7 @@ the next.
 2. data layer + types + auth wiring (shared Supabase backend)
 3. the reckie object (detail) — the heart; everything links to it
 4. add/reckie flow (so real data can be created)
-5. Profile / Me (with co-sign number, Top 8 slot)
+5. Profile / Me (with vouch number, Top 3 in-section)
 6. Home (pulse + catalogue)
 7. Saved + tried-it action
 8. Circle
@@ -310,3 +317,77 @@ the next.
 10. lineage payoff (pulse item + notification)
 
 Each step: build, run on device via Expo Go, confirm it feels right, then proceed.
+
+---
+
+## 14. v2 decisions (locked after first build review)
+
+These supersede earlier sections where they conflict. Added after seeing the app run on device.
+
+### 14.1 Terminology: "vouches" not "co-signs"
+Rename **co-signs -> vouches** everywhere (UI + going forward in docs). When someone backs your
+reckie or reckies the same thing, that's a **vouch**. The profile hero number is "vouches earned."
+Warmer and about trust, not clout. (DB table can stay `cosigns`; the user-facing word is vouch.)
+
+### 14.2 Top lists are Top 3, nested in category sections (NOT full-page blocks)
+The earlier "Top 8 as stacked blocks at the top of profile" is replaced:
+- **Top 3**, not Top 8. A ranked list is max 3 items. (3 is decisive, achievable, shareable, and
+  fits a compact in-section format. 8 bloated the page.)
+- **Lives inside its category section**, not at the top of the profile. When a category (Watch,
+  Eat, etc.) has **3+ reckies**, that category's section shows a compact "Top 3" feature directly
+  under the section header: three tight rows (marigold rank number, small native-shape thumbnail,
+  Fraunces title, tiny meta), a small "★ [Name]'s Top 3" label with a "See all >" link that opens
+  the full ranked/editable view. Below it, the rest of that category flows in the normal grid.
+- **Gate:** only show the Top 3 feature once a category has 3+ reckies. Below that, no ranked
+  feature. This kills the broken "Top 1" state.
+- Visual target: `design-mockups/reckie-top3-in-section.html` (left treatment).
+
+### 14.3 Circle = browse the stuff, not just the people
+The Circle tab gets two lenses; **Browse is the default**:
+- **Browse (default):** content-first. Category pills (All / Watch / Listen / Read / Places / Play)
+  filter everything the circle reckies. This serves the "I want a show — what does my circle love?"
+  intent. Within a category, sort by most-vouched so overlap rises to the top.
+- **People:** the current person-first list (browse by who).
+- Visual target: `design-mockups/reckie-circle-browse.html`.
+
+### 14.4 Circle classics (overlap / "super-reckie")
+When **3+ people in the circle** reckie the same canonical thing, it becomes a **circle classic** —
+the highest-trust signal in the app. Treatment (visual target:
+`design-mockups/reckie-circle-classic-hero.html`):
+- hero card at the top of Browse: full-bleed image, marigold "★ Loved by N of your circle" seal,
+  layered card edges behind it (looks like stacked reckies), glowing gold border, big celebratory
+  faces, and a pulled "why" quote from the most-loved take.
+- floats to the top of category browse; the strongest "you should really try this."
+- This is circle-scoped collaborative filtering — keep it scoped to the circle (never strangers),
+  which is what keeps it warm vs. Amazon-creepy.
+- Lower tiers just show a "N vouches" chip on the row; the full hero treatment is reserved for 3+.
+
+### 14.5 Home layout (profile-first)
+The first on-device build put the pulse at the top — a wall of circle activity before the user's
+own profile. v2 flips this:
+- **Open on yourself:** name, stats, catalogue shelves (with in-section Top 3 where applicable).
+- **Pulse at the bottom** of Home scroll: max ~3 items + "See all → Circle." Calm, skippable.
+- Co-sign/vouch **stamp** (oxblood-soft flourish) sits near the profile header when overlap exists,
+  not buried below the feed.
+
+### 14.6 Place detail hero (full-width)
+Restaurant/place reckies use a **full-width 4:3 hero** on the detail sheet — not the centered
+portrait poster + blurred backdrop used for watch/read. Wide Google Place photos looked broken
+when squeezed into a small floating tile. Media keeps the poster-on-blur treatment
+(`design-mockups/reckie-shapes-and-grid.html` left); places get edge-to-edge landscape art.
+
+### 14.7 Designed, build when there's scale (NOT v1 — captured so they're not lost)
+
+**Taste-explore progress (the "love language" feature).** Trying someone's reckies = getting to
+know their taste. On a person's profile, show a quiet progress indicator: "you've tried 7 of Cam's
+10 reckies." A gentle milestone when you complete someone's list ("you get Cam's taste now").
+**Frame as a relationship/closeness feature, NOT points/leaderboard** — the reward is knowing them
+better. No grind mechanics, no public score. Build after the core loop is proven in use.
+
+**Reckie journey / reach visualization (the viral payoff).** Visualize how far a reckie has
+traveled via the lineage chain (`source_reckie_id`). Ship in order of ambition: (1) a counter +
+notification ("23 people reckied this because of you"), then (2) the lineage chain ("you -> Cam ->
+Steve -> 3 people in Austin"), then (3) the aspiration: a **map** with pins lighting up as a reckie
+spreads city to city ("your reckie reached Denver"). The map ties to the city-first concept and is
+the most screenshot-worthy/viral moment — but it is BORING WHEN EMPTY, so build it only once there's
+real spread to show. Counter first, map later.

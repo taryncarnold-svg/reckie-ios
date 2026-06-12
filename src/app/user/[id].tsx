@@ -11,7 +11,6 @@ import { CategorizedShelves } from '@/components/categorized-shelves';
 import { PressableScale } from '@/components/pressable-scale';
 import { useReckieDetail } from '@/components/reckie-detail-sheet';
 import { Colors, Fonts, Radii } from '@/constants/theme';
-import { TopEight } from '@/components/top-eight';
 import { useAuth } from '@/lib/auth';
 import { fetchCosignsReceivedCount, fetchTopLists, fetchUserProfile, setFollowing } from '@/lib/data';
 import { notifyDataChanged } from '@/lib/refresh';
@@ -125,20 +124,10 @@ export default function UserProfileScreen() {
           </Text>
         </PressableScale>
 
-        {topLists.length > 0 && (
-          <View style={styles.topEights}>
-            {topLists.map((entry) => (
-              <TopEight
-                key={entry.list.id}
-                entry={entry}
-                onPressRec={(rec) => openReckie({ rec, onChanged: load })}
-              />
-            ))}
-          </View>
-        )}
-
         <CategorizedShelves
           recs={recs}
+          topLists={topLists}
+          profileName={displayName}
           emptyMessage={loaded ? 'No reckies yet' : 'Loading…'}
           emptyHint={loaded ? `${displayName} hasn’t added anything yet.` : undefined}
           onPressRec={(rec) => openReckie({ rec, onChanged: load })}
@@ -248,10 +237,6 @@ const styles = StyleSheet.create({
   },
   followingText: {
     color: Colors.ink2,
-  },
-  topEights: {
-    gap: 14,
-    marginBottom: 26,
   },
   backBtn: {
     position: 'absolute',
