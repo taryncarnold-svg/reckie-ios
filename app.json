@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "reckie-ios",
+    "name": "Reckie",
     "slug": "reckie-ios",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "reckieios",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#fafaf7",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
