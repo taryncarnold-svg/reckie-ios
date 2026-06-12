@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reckie — refined editorial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: #161616; font-family: 'Inter', sans-serif; padding: 44px 14px 90px; color: #fff; }
+  .intro { max-width: 1100px; margin: 0 auto 36px; }
+  .intro h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 27px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .intro p { color: #a5a5a5; font-size: 14.5px; max-width: 720px; line-height: 1.6; }
+  .row { max-width: 1100px; margin: 0 auto; display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .col { width: 380px; }
+  .cap { margin-bottom: 14px; }
+  .cap .nm { font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; margin-bottom: 4px; }
+  .cap .ds { font-size: 12.5px; color: #9a9a9a; line-height: 1.5; }
+  .phone { width: 380px; height: 800px; border-radius: 38px; overflow: hidden; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); background:#FBFAF8; }
+  .scr { width:100%; height:100%; position:relative; overflow:hidden; background:#FBFAF8; }
+  .sb { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; position:absolute; top:0; left:0; right:0; z-index:10; color:#fff; }
+
+  .hero { height:420px; position:relative; overflow:hidden; }
+  .hero .ph { width:100%; height:100%; background:linear-gradient(168deg,#9DB89E 0%,#5E7A6B 45%,#36493D 100%); }
+  .hero .grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(18,16,13,0.9) 0%, rgba(18,16,13,0.25) 45%, transparent 72%); }
+  .hero .top { position:absolute; top:54px; left:22px; right:22px; display:flex; justify-content:space-between; align-items:center; z-index:3; }
+  .hero .chip { background:rgba(255,255,255,0.16); backdrop-filter:blur(12px); border:0.5px solid rgba(255,255,255,0.28); color:#fff; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:7px 12px; border-radius:30px; }
+  .hero . icon { width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.16);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;}
+  .hero .cap2 { position:absolute; bottom:22px; left:22px; right:22px; z-index:3; }
+  .hero h1 { font-family:'Fraunces',serif; font-weight:500; font-size:34px; letter-spacing:-0.02em; line-height:1.0; color:#fff; }
+  .hero .meta { font-size:13px; color:rgba(255,255,255,0.78); margin-top:10px; font-weight:500; }
+
+  .body { padding:20px 22px; }
+
+  /* tags */
+  .tags { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; }
+  .tag { font-size:12px; font-weight:500; color:#6B6660; background:#F1EDE4; padding:6px 11px; border-radius:30px; }
+
+  /* byline */
+  .by { display:flex; align-items:center; gap:11px; margin-bottom:14px; }
+  .by .av { width:38px;height:38px;border-radius:50%;background:#C46B4A;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:15px; }
+  .by .t .top { font-size:11px; color:#9C968D; text-transform:uppercase; letter-spacing:0.05em; }
+  .by .t .nm { font-size:15px; font-weight:600; color:#16140F; }
+  .by .also { margin-left:auto; display:flex; }
+  .by .also span { width:30px;height:30px;border-radius:50%;margin-left:-9px;border:2px solid #FBFAF8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600; }
+
+  .note { font-size:16.5px; line-height:1.5; color:#2A2823; margin-bottom:20px; }
+
+  .also-line { font-size:13px; color:#9C968D; margin-bottom:22px; }
+  .also-line b { color:#6B6660; font-weight:600; }
+
+  /* actions — variant 1: action primary */
+  .acts1 { display:flex; flex-direction:column; gap:9px; }
+  .acts1 .pri { width:100%; padding:16px; border-radius:14px; background:#16140F; color:#fff; font-weight:600; font-size:15px; border:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .acts1 .secrow { display:flex; gap:9px; }
+  .acts1 .sec { flex:1; padding:14px; border-radius:14px; background:#fff; border:1px solid #E6DECF; color:#16140F; font-weight:600; font-size:14.5px; display:flex; align-items:center; justify-content:center; gap:7px; }
+  .acts1 .sec.reckie { background:#FBF0EE; border-color:#F0D9D5; color:#8B3A2F; }
+
+  /* actions — variant 2: reckie primary */
+  .acts2 { display:flex; flex-direction:column; gap:9px; }
+  .acts2 .pri { width:100%; padding:16px; border-radius:14px; background:#8B3A2F; color:#fff; font-weight:600; font-size:15px; border:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .acts2 .secrow { display:flex; gap:9px; }
+  .acts2 .sec { flex:1; padding:14px; border-radius:14px; background:#fff; border:1px solid #E6DECF; color:#16140F; font-weight:600; font-size:14.5px; display:flex; align-items:center; justify-content:center; gap:7px; }
+  .acts2 .watch { background:#16140F; color:#fff; border:none; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Editorial, refined — and two action emphases</h1>
+  <p>Serif on the title only (lighter weight, no italic — tailored, not theatrical). Everything else clean Inter. Metadata tags pulled in. The CTA auto-detects where it's streaming. Left and right are identical except for which action is loudest — tell me which feels right.</p>
+</div>
+
+<div class="row">
+
+  <!-- VARIANT 1: action/watch primary -->
+  <div class="col">
+    <div class="cap"><div class="nm">1 — Watch is loudest (utility first)</div><div class="ds">The dark button is the auto-detected streaming action. Save + Reckie sit beneath as an equal pair. Best if "help me act on this" is the main job.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="hero">
+        <div class="ph"></div><div class="grad"></div>
+        <div class="top"><div class="chip">▶ Show</div><div class="icon">⋯</div></div>
+        <div class="cap2"><h1>Friday Night Lights</h1><div class="meta">2006–2011 · 5 seasons · NBC</div></div>
+      </div>
+      <div class="body">
+        <div class="tags"><span class="tag">Drama</span><span class="tag">Small-town</span><span class="tag">Sports</span><span class="tag">Tearjerker</span></div>
+        <div class="by">
+          <div class="av">T</div>
+          <div class="t"><div class="top">Reckied by</div><div class="nm">Taryn</div></div>
+          <div class="also"><span style="background:#6E7E8E;">M</span><span style="background:#7C8466;">B</span></div>
+        </div>
+        <div class="note">One of my top 2 series of all time. Good American football lore.</div>
+        <div class="also-line"><b>Mia &amp; Brett</b> also reckied this</div>
+        <div class="acts1">
+          <button class="pri">▶ Watch on Hulu</button>
+          <div class="secrow">
+            <button class="sec">✦ Save</button>
+            <button class="sec reckie">↗ Reckie it</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- VARIANT 2: reckie primary -->
+  <div class="col">
+    <div class="cap"><div class="nm">2 — Reckie is loudest (social loop first)</div><div class="ds">Oxblood "Reckie it" is the hero — pushing the pass-it-on loop. Watch + Save sit beneath. Best if growing the social graph is the main job.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="hero">
+        <div class="ph"></div><div class="grad"></div>
+        <div class="top"><div class="chip">▶ Show</div><div class="icon">⋯</div></div>
+        <div class="cap2"><h1>Friday Night Lights</h1><div class="meta">2006–2011 · 5 seasons · NBC</div></div>
+      </div>
+      <div class="body">
+        <div class="tags"><span class="tag">Drama</span><span class="tag">Small-town</span><span class="tag">Sports</span><span class="tag">Tearjerker</span></div>
+        <div class="by">
+          <div class="av">T</div>
+          <div class="t"><div class="top">Reckied by</div><div class="nm">Taryn</div></div>
+          <div class="also"><span style="background:#6E7E8E;">M</span><span style="background:#7C8466;">B</span></div>
+        </div>
+        <div class="note">One of my top 2 series of all time. Good American football lore.</div>
+        <div class="also-line"><b>Mia &amp; Brett</b> also reckied this</div>
+        <div class="acts2">
+          <button class="pri">↗ Reckie it — pass it on</button>
+          <div class="secrow">
+            <button class="sec watch">▶ Watch on Hulu</button>
+            <button class="sec">✦ Save</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+</body>
+</html>

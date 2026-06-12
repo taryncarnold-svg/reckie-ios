@@ -1,198 +1,181 @@
 # DESIGN.md — Reckie
 
-The visual system. Pair with `PRODUCT.md` (architecture & behavior). When in doubt:
-**clean and modern first; warmth and personality in small, confident doses.**
+The visual system, locked through mockup iteration. Pair with `PRODUCT.md` (architecture & behavior).
+Four approved mockups in `/design-mockups/` are the **literal visual targets** — match them, don't reinterpret:
+- `reckie-onboarding-v6.html` — the entrance
+- `reckie-editorial-refined.html` — action hierarchy on a reckie
+- `reckie-shapes-and-grid.html` — the detail screen + the catalogue grid (per-category image shapes)
 
-The reference points are Airbnb and Letterboxd — white, spacious, photo-forward, structurally
-crisp. Reckie's personality (oxblood, marigold, a serif accent, the co-sign stamp) is
-**punctuation on a clean page, never the whole field.** An earlier draft drenched everything in
-cream and serif and read like a toy — explicitly what we are NOT doing. Delight is concentrated
-into a few signature moments; everything else stays calm and legible.
-
----
-
-## 1. Principles
-
-1. **White base, real air.** The field is white. Generous whitespace. Crisp structure.
-2. **Warmth is a touch, not a coat.** A barely-warm off-white on surfaces; warmth mostly comes
-   from photography and one or two accents per screen.
-3. **Sans does the work; serif is a rare guest.** Clean sans for all UI. Serif (Fraunces) only on
-   key display moments: wordmark, names, titles, a recommender's note.
-4. **Accents are punctuation.** Oxblood and marigold appear in small deliberate places, never
-   spread evenly across a screen.
-5. **Delight is concentrated.** Pick the signature moments (the co-sign stamp, the lineage payoff,
-   the Top 8, the onboarding panel) and make them special. Keep everything else restrained so they
-   stand out.
-6. **Photo-forward.** Real imagery (place photos, posters, covers) carries the warmth so the chrome
-   can stay clean and white.
+When prose here and a mockup ever disagree, **the mockup wins.** Build to the pixels.
 
 ---
 
-## 2. Color
+## 0. The one-line philosophy
+
+Clean and modern first; personality in small, deliberate doses. The reference is editorial print
+(NYT, Kinfolk) meeting Airbnb/Letterboxd — white, spacious, photo-forward, with calm serif titles
+and warm accents used sparingly. **Two earlier failures to never repeat:** (1) drenching everything
+in cream + serif (reads "toy"), and (2) flat wireframe with a serif font dropped on top (reads
+"unfinished database"). The fix for both is the same: real hierarchy, big confident imagery, one
+clear focal point and action per screen, accents as punctuation.
+
+---
+
+## 1. Color
 
 ```
---white:        #FFFFFF   /* the base field */
---paper:        #FBFAF8   /* barely-warm off-white — surfaces, cards, pills */
---line:         #ECEAE5   /* warm hairline border */
---line-soft:    #F3F1EC
---ink:          #1C1A17   /* warm near-black — never pure #000 */
---ink-2:        #6B6660   /* warm grey-taupe — secondary text. NEVER cold #888 */
---ink-3:        #9C968D   /* faint — captions, hints */
+--white:        #FFFFFF   base field
+--paper:        #FBFAF8   barely-warm off-white — app background, surfaces
+--paper-2:      #FFFDF8   warmer tint — "yours"/highlighted cards
+--line:         #ECEAE5   warm hairline
+--line-2:       #EBE7DE   card border
+--ink:          #16140F   warm near-black — never #000
+--ink-2:        #6B6660   warm taupe — secondary text — NEVER cold #888
+--ink-3:        #9C968D   faint — captions, meta
 
---oxblood:      #8B3A2F   /* PRIMARY accent — wordmark dot, FAB, key actions, avatars */
---oxblood-deep: #6E2B22
---oxblood-soft: #FBF0EE   /* tinted background for the co-sign stamp */
+--oxblood:      #8B3A2F   PRIMARY accent — wordmark dot, Reckie-it, save chips, key moments
+--oxblood-soft: #FBF0EE   tinted bg for save buttons / co-sign stamp
+--oxblood-line: #F0D9D5
 
---marigold:      #D99A2B  /* HIGHLIGHT accent — the Wes title-card move, scores, featured */
+--marigold:      #D99A2B   HIGHLIGHT — "yours" labels, Top-8 numbers, rare special beats
 --marigold-deep: #B97D15
---marigold-soft: #FBF3E2
 ```
 
-Muted, low-saturation category tints (for cover gradients / chips — all sit at the same low
-saturation, like a faded postcard):
+Muted category tints (cover gradients when no art; all same low saturation):
 ```
-eat   #C46B4A      drink #6E8499      do    #6E8E78
-watch #5B5470      read  #B8985E      play  #6E9079      shop #9A7B8E
+eat #C46B4A   drink #6E8499   do #6E8E78   watch #5B5470   read #B8985E   play #6E9079   shop #9A7B8E
 ```
 
-**Anti-AI rules (enforce these — they're why it won't look generated):**
-- base is warm white/off-white, never blue-white, never pure `#FFF` on every surface
-- ink is warm near-black, never `#000000`
-- secondary text is warm taupe (`--ink-2`), never cold grey `#888` — this is the single biggest tell
-- the accent appears once or twice per screen, never evenly distributed
-- category tints are all muted to the same low saturation
+**Anti-AI rules (enforce):** warm cream base never blue-white; ink warm near-black never #000;
+secondary text warm taupe never cold #888 (biggest tell); accent appears 1-2x per screen, never
+evenly spread; category tints all muted to the same low saturation.
 
 ---
 
-## 3. Typography
+## 2. Type
 
-**Sans (workhorse): Inter.** All UI — tabs, pills, stats, body, buttons, labels, metadata.
-**Serif (rare accent): Fraunces.** Only: the wordmark, person names, screen/section display
-titles, city names, and a recommender's note. Roughly ≤6 serif moments per screen.
+**Inter** = workhorse, everything (UI, body, labels, buttons, meta).
+**Fraunces** = rare accent, weight **500, no italic** (black/italic reads theatrical — banned).
+Use Fraunces ONLY on: the wordmark, screen/item titles, person names, city names. ~<=6 serif
+moments per screen. Everything else Inter.
 
-Scale (sans unless marked serif):
+Scale:
 ```
-display   28–34px  Fraunces 600   screen titles, person name, onboarding headline
-title     20–24px  Fraunces 600   city names, reckie title on detail
-section   13px     Inter 600      section headers (uppercase-ish, slight tracking)
-body      15px     Inter 400      notes, descriptions, general copy
-label     13px     Inter 500      pills, tabs, buttons
-caption   11–12px  Inter 400/500  metadata, counts, hints (--ink-3)
-note      16–17px  Fraunces 400   a recommender's take — but see card rule below
+display   30-34  Fraunces 500   item title (detail), onboarding headline
+title     16-24  Fraunces 500/600  card titles, city names, section heads where serif
+body      15-17  Inter 400      notes (a reckie note is Inter, ~16.5, NOT an italic pull-quote)
+label     13-14  Inter 600      buttons, tabs, pills
+eyebrow   10-11  Inter 700      uppercase, letter-spacing 0.06-0.09em, category/"reckied by" tags
+meta      11-12  Inter 400/500  --ink-3 captions
 ```
 
-Sentence case everywhere. Two sans weights (400/500) plus 600 reserved for the few bold labels.
+Sentence case everywhere. The reckie note reads like a text from a friend — plain Inter, warm,
+direct — never a precious serif callout.
+
+---
+
+## 3. Image shapes (IMPORTANT — driven by category)
+
+Art must never be cropped wrong. The image container's aspect ratio is set by category, and art
+fits within its native shape:
+```
+watch / read        2:3  tall poster / book cover
+listen (album/pod)  1:1  square
+play (games)        1:1  (boxart varies; default square)
+eat / drink / do    4:3  landscape photo
+shop (products)     1:1  square
+```
+In grids: horizontal scroll rows, each row using its category's ratio (see grid mockup).
+On the **detail screen**: the hero keeps the item's native shape — e.g. a 2:3 poster sits centered
+at ~210px wide on a **blurred, darkened, scaled-up copy of its own art** as the backdrop, so tall
+art never leaves dead space. Content rises in a `paper` sheet with a 24px top radius over the
+bottom of that backdrop.
 
 ---
 
 ## 4. Shape, spacing, texture
 
-- **Radii:** cards 16px, tiles/inputs 13–14px, pills 30px (full), buttons 13px.
-- **Borders:** `0.5px solid var(--line)` — thin, warm. Prefer hairline borders over heavy shadows.
-- **Shadows:** minimal. A soft shadow only on the FAB and floating sheets. No material-design float.
-- **Spacing:** generous. Screen padding 20–24px. Section gaps ~18–22px. Let it breathe.
-- **Texture:** a *barely-there* paper grain is allowed on **one** warm surface per screen (e.g. the
-  onboarding art panel) at very low opacity. Do NOT grain the whole app — it reads as costume.
-- **Photography** fills card/cover/poster slots. Gradients are placeholders only until real
-  metadata images load.
+- radii: cards 16, tiles 10-13, buttons 14, pills 30 (full), detail sheet 24 (top corners)
+- borders: `0.5px solid --line` warm hairlines; prefer over shadows
+- shadows: minimal; soft only on the FAB and floating sheets
+- spacing: generous but not loose — onboarding tightened so inputs aren't bottom-exiled
+- texture: a barely-there grain allowed on ONE warm surface max per screen; never app-wide
+- photography fills cover/poster slots; gradients are placeholders only
 
 ---
 
 ## 5. Core components
 
 ### Wordmark
-"Reckie" in Fraunces 600, with the period in oxblood: `Reckie.` The dot is the accent.
+`Reckie.` — Fraunces 600, the period in oxblood.
 
 ### Bottom tab bar
-White, blurred, `0.5px` top border. Five slots: Home · Circle · ＋ · Saved · Search.
-Center ＋ is an oxblood circular FAB (the one place with a soft shadow), slightly raised.
-Inactive icons `--ink-3`, active `--ink`. Tiny labels (10px).
+White, blurred, 0.5px top border. **Home . Circle . + . Saved . Search.** Center + is the oxblood
+FAB (only element with a soft shadow), slightly raised. Map is NOT here — it lives inside Places.
 
-### City card (Places)
-Photo-forward, clean. Image top (real city/place photo) with a small white count chip
-(Fraunces) in the corner; below, city name in Fraunces 600 + a thin caption of categories
-("Eat · Drink · Do"). 2-up grid.
+### The reckie detail (the heart — match `reckie-shapes-and-grid.html` left)
+- native-shape hero on blurred self-backdrop (see section 3)
+- category chip on the art (e.g. "Show"); back + more as floating circular buttons
+- title Fraunces 500, centered; meta line in --ink-3, centered
+- metadata **tags** pulled from the source API (e.g. "Drama . Small-town . Sports . Tearjerker";
+  for places "Italian . Date night . Reservations") as --paper pills
+- byline: avatar + "Reckied by / Name", with co-sign faces ("also reckied by") to the right.
+  **No date.** The note is plain Inter, reads like a text.
+- "Mia & Brett also reckied this" co-sign line
+- **Actions, in this hierarchy:** **Save for later = primary** (big dark `--ink` button). Beneath,
+  a row of two: the **smart auto-CTA** (Watch/Reserve/View — see section 6) and **Reckie it** (oxblood-
+  tinted). Save is loudest because in-the-moment you usually can't act yet — you save for when you
+  can. Reckie-it is present but never pushy.
 
-### Poster tile (Watch/Read/Play)
-Letterboxd-style. 2:3 poster image, subtle bottom gradient, title in small bold sans over it.
-3-up grid. Photo carries it; chrome stays minimal.
+### Catalogue grid (match `reckie-shapes-and-grid.html` right)
+Horizontal-scroll rows per category, each in its native ratio (section 3). Section label = Inter 700
+uppercase + faint count. Item title Fraunces (places/serif-worthy) or Inter 600 (small tiles),
+attributor in --ink-3.
 
-### The reckie object / detail (get this right)
-The most important screen. A clean white page:
-- hero image (place photo / poster) with a small white category+city chip
-- **title** in Fraunces 600
-- a short location/context line in `--ink-2`
-- **who reckied it: ONE clean line** — small avatar + name. **No date.** If others co-signed,
-  show "also reckied by ◐◐◐" with faces right here.
-- **the note reads like a text from a friend** — NOT a precious italic pull-quote. Warm, direct,
-  `--ink`, normal weight, comfortable size. It's a message, not a magazine callout.
-- **lineage** (subtle, if present): "originally Camden's find" in `--ink-3`
-- **co-sign stack:** expandable — each co-signer's face + their one-line take
-- external score (Yelp/RT) as a small chip in `--marigold-soft`, secondary
-- tags as `--paper` pills
-- **loop actions:** Save · I tried this · Reckie it; plus the silent affiliate action-link
-  (Reserve/Watch/Buy) as the primary oxblood button
+### Onboarding (match `reckie-onboarding-v6.html`)
+Show-don't-tell. Wordmark, Fraunces headline ("Your favorite people's favorite stuff."), Inter
+subline ("Keep, organize, and share everything you and your people swear by."). Then **live example
+reckie cards**: the top card is the user-perspective "Your reckie" (warm `--paper-2` tint, marigold
+label, dark check "Yours" marker — reads already-kept), the others are "Dad's reckie / Cam's reckie"
+with oxblood **Save** buttons (teaches the collect gesture pre-signup). Vary categories across cards
+to show range + shapes. Auth: **phone-first** with an Email toggle, country-code field, dark primary
+"Get started", reassurance line. Spacing tight enough that the input sits comfortably, not exiled.
 
-> Correction from the mockup: the old card set the note as a big italic serif quote and gave
-> "reckied by Camden · 5 days ago" too much weight. Fix: drop the date, shrink attribution to one
-> clean line, add co-sign faces, and make the note feel like a friend's text, not editorial copy.
+### Co-sign stamp (signature delight — use sparingly)
+Soft `--oxblood-soft` block, overlapping avatar faces, short line ("3 in your circle reckied X").
+The one flourish on Home/profile; don't repeat the treatment elsewhere.
 
-### Co-sign stamp (signature delight moment)
-The one flourish on Home/profile. Soft oxblood-tinted (`--oxblood-soft`) rounded block,
-overlapping circular avatars (Fraunces initials or photos), short line:
-"**3 in your circle** reckied The Bear." Warm, social-proof, restrained. This is *the* delight
-beat — keep it special by not repeating the treatment elsewhere.
-
-### The pulse (Home top)
-A calm, capped strip of recent circle reckies/co-signs and lineage payoffs. Each item: small
-avatar/photo, a one-line plain-language event ("Camden reckied a place in LA"), tap-through.
-High signal, never an infinite feed. Lineage payoff items ("23 people reckied this because of
-you") can get a subtle marigold accent — they're the special ones.
-
-### Profile header
-Photo (circle), name (Fraunces), @handle, one-line taste bio (`--ink-2`). **Hero number =
-co-signs**, shown larger; reckies/cities secondary and smaller. Top 8 (if any) shown prominently
-below. Then sub-tabs (My reckies · Saved) and the catalogue.
+### Profile
+Photo, name (Fraunces), @handle, one-line taste bio. **Hero number = co-signs** (larger); reckies/
+cities secondary. Top 8 prominent if present. Sub-tabs (My reckies . Saved), then catalogue.
 
 ### Top 8
-A clean ranked list: number (Fraunces, oxblood), thumbnail, title. Drag handle for reordering.
-Header like "Top 8 · Must-Watch." Feels like a considered chart, not a cluttered grid.
-
-### Onboarding entrance
-Mostly white/clean. ONE warm signature panel: an oxblood art block (with the allowed subtle
-grain) carrying the wordmark and a marigold accent. Below it on white: a marigold eyebrow
-("A catalogue of good taste"), a Fraunces headline, a plain-sans subline, a dark primary button.
-This is the single most "designed" screen — earns it because it's the first impression.
-
-### Buttons
-- primary action: solid, `--ink` or `--oxblood` depending on context, white text, 13px radius
-- the affiliate/primary action on a reckie: oxblood
-- ghost/secondary: white, `0.5px --line` border, `--ink` text
-- pills (filters/tags): `--paper` bg, `0.5px --line`; active = `--ink` bg, white text
+Clean ranked list: number (Fraunces, oxblood), thumbnail (native shape), title, drag handle.
+Header like "Top 8 . Must-Watch." A considered chart, not a cluttered grid.
 
 ---
 
-## 6. Motion
+## 6. The smart auto-CTA
 
-Calm and physical, never bouncy or playful-cartoonish (that skews young).
-- press states: subtle scale (0.97–0.98) + slight opacity, quick (~120ms)
-- sheet transitions: smooth slide-up, iOS-native easing
-- the **Top 8 drag-to-rank** should feel tactile and satisfying — this is a place to spend motion budget
-- the **lineage payoff** moment deserves a small, earned celebratory beat (restrained — a settle,
-  a subtle marigold glow, not confetti)
-- haptics on key taps (save, tried-it, reckie-it, co-sign) via expo-haptics
+The action button auto-detects the right action from the item's metadata (JustWatch/TMDB for
+watch -> "Watch on Hulu" etc.; Resy/Google for places -> "Book on Resy"/"Open in Maps"; store for
+books -> "View on Goodreads"). Never hardcode one service. This button silently carries the affiliate
+link (see PRODUCT.md section 10) — invisible to the user.
 
 ---
 
-## 7. What to avoid (hard "no" list)
+## 7. Motion
 
-- cream/serif everywhere (the toy-story failure mode)
-- pure `#000` ink or cold `#888` grey secondary text
-- the recommender's note styled as a precious italic pull-quote
-- dates on the reckie attribution line
-- evenly-distributed accent color — keep it to 1–2 accent hits per screen
-- heavy shadows / material-design float
-- map as a nav tab
-- open comment threads (co-sign + one-line take only)
-- bouncy/cartoonish motion
-- grain on more than one surface per screen
+Calm, physical, never bouncy/cartoonish (skews young). Press: scale 0.97-0.98 + slight opacity,
+~120ms. Sheets: native slide-up easing. Top-8 drag: tactile, satisfying — spend budget here.
+Lineage payoff: a small earned beat (a settle, subtle marigold glow — not confetti). Haptics
+(expo-haptics) on save / tried-it / reckie-it / co-sign.
+
+---
+
+## 8. Hard "no" list
+
+cream/serif everywhere . pure #000 or cold #888 . the note as an italic pull-quote . dates on the
+reckie byline . evenly-spread accent color . heavy/material shadows . map as a nav tab . open
+comments (co-sign + one-line take only) . cropped/squished art (always native ratio) . bouncy
+motion . grain on more than one surface per screen.

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reckie — onboarding v6</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: #161616; font-family: 'Inter', sans-serif; padding: 44px 14px 90px; color: #fff; display:flex; flex-direction:column; align-items:center; }
+  .intro { max-width: 760px; margin: 0 auto 32px; width:100%; }
+  .intro h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .intro p { color: #a5a5a5; font-size: 14px; line-height: 1.6; }
+
+  .phone { width: 390px; height: 844px; border-radius: 40px; overflow: hidden; position: relative; box-shadow: 0 24px 70px rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.08); background:#FBFAF8; }
+  .scr { width:100%; height:100%; position:relative; overflow-y:auto; background:#FBFAF8; display:flex; flex-direction:column; }
+  .scr::-webkit-scrollbar{display:none;}
+  .sb { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; color:#16140F; flex-shrink:0; }
+
+  .wm { font-family:'Fraunces',serif; font-weight:600; font-size:23px; letter-spacing:-0.02em; color:#16140F; text-align:center; padding:8px 0 26px; flex-shrink:0; }
+  .wm .dot{color:#8B3A2F;}
+
+  .head { padding: 0 26px; flex-shrink:0; }
+  h1.title { font-family:'Fraunces',serif; font-weight:500; font-size:32px; letter-spacing:-0.02em; line-height:1.07; color:#16140F; margin-bottom:12px; }
+  .sub { font-size:15px; color:#6B6660; line-height:1.45; margin-bottom:24px; }
+
+  .cards { padding: 0 20px; display:flex; flex-direction:column; gap:11px; flex-shrink:0; }
+  .rc { background:#fff; border:0.5px solid #EBE7DE; border-radius:16px; padding:12px; display:flex; gap:12px; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.03); }
+  .rc.mine { border-color:#E8D5BC; background:#FFFDF8; }
+  .rc .img { width:58px; height:58px; border-radius:10px; flex-shrink:0; }
+  .rc.tall .img { width:50px; height:70px; }
+  .rc .meat { flex:1; min-width:0; }
+  .rc .rb { font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#8B3A2F; margin-bottom:3px; }
+  .rc.mine .rb { color:#B97D15; }
+  .rc .nm { font-family:'Fraunces',serif; font-weight:600; font-size:17px; letter-spacing:-0.01em; color:#16140F; line-height:1.1; margin-bottom:3px; }
+  .rc .note { font-size:13px; color:#6B6660; line-height:1.25; margin-bottom:2px; }
+  .rc .meta { font-size:11.5px; color:#9C968D; }
+  .rc .save { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .rc .save .btn { width:38px; height:38px; border-radius:50%; background:#FBF0EE; border:1px solid #F0D9D5; display:flex; align-items:center; justify-content:center; color:#8B3A2F; font-size:16px; }
+  .rc .save .lbl { font-size:9.5px; font-weight:600; color:#8B3A2F; }
+  .rc.mine .save .btn { background:#16140F; border-color:#16140F; color:#fff; }
+  .rc.mine .save .lbl { color:#6B6660; }
+
+  .foot { padding: 24px 24px 0; flex-shrink:0; }
+  .toggle { display:flex; background:#F1ECE3; border-radius:12px; padding:3px; margin-bottom:10px; }
+  .toggle .opt { flex:1; text-align:center; padding:9px; font-size:13.5px; font-weight:600; color:#9C968D; border-radius:9px; }
+  .toggle .opt.on { background:#fff; color:#16140F; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .field { width:100%; padding:15px 16px; background:#fff; border:0.5px solid #E0DBD0; border-radius:14px; font-size:15px; color:#16140F; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .field .ph-prefix { color:#9C968D; font-weight:500; }
+  .field .ph-placeholder { color:#B5AFA4; }
+  .cta { width:100%; padding:16px; background:#16140F; color:#fff; border:none; border-radius:14px; font-weight:600; font-size:15.5px; }
+  .reassure { text-align:center; font-size:12px; color:#9C968D; margin-top:12px; line-height:1.4; padding-bottom:8px; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Onboarding v6 — possessive labels, varied categories</h1>
+  <p>"Your reckie / Dad's reckie / Cam's reckie" — a reckie is a thing a person owns. Three different categories now: yours is a book (tall cover), Dad's a place, Cam's a show — which also shows off the different image shapes.</p>
+</div>
+
+<div class="phone"><div class="scr">
+  <div class="sb"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+  <div class="wm">Reckie<span class="dot">.</span></div>
+
+  <div class="head">
+    <h1 class="title">Your favorite people's favorite stuff.</h1>
+    <div class="sub">Keep, organize, and share everything you and your people swear by.</div>
+  </div>
+
+  <div class="cards">
+    <div class="rc mine tall">
+      <div class="img" style="background:linear-gradient(150deg,#3A6E78,#1C3A42);"></div>
+      <div class="meat">
+        <div class="rb">Your reckie</div>
+        <div class="nm">Tomorrow, and Tomorrow, and Tomorrow</div>
+        <div class="note">"Couldn't put it down."</div>
+        <div class="meta">Gabrielle Zevin · Novel</div>
+      </div>
+      <div class="save"><div class="btn">✓</div><div class="lbl">Yours</div></div>
+    </div>
+    <div class="rc">
+      <div class="img" style="background:linear-gradient(150deg,#C9A88E,#8A6A4E);"></div>
+      <div class="meat">
+        <div class="rb">Dad's reckie</div>
+        <div class="nm">Sushi Noz</div>
+        <div class="note">"Best sushi I've had in LA."</div>
+        <div class="meta">Google 4.8 · Los Angeles</div>
+      </div>
+      <div class="save"><div class="btn">✦</div><div class="lbl">Save</div></div>
+    </div>
+    <div class="rc tall">
+      <div class="img" style="background:linear-gradient(150deg,#4A465E,#1F1D2E);"></div>
+      <div class="meat">
+        <div class="rb">Cam's reckie</div>
+        <div class="nm">Severance</div>
+        <div class="note">"Watch with no spoilers."</div>
+        <div class="meta">97% RT · Apple TV+</div>
+      </div>
+      <div class="save"><div class="btn">✦</div><div class="lbl">Save</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="toggle"><div class="opt on">Phone</div><div class="opt">Email</div></div>
+    <div class="field"><span class="ph-prefix">🇺🇸 +1</span><span class="ph-placeholder">(555) 123-4567</span></div>
+    <button class="cta">Get started</button>
+    <div class="reassure">We'll text a code to verify. Use the number your people have for you so they can find you.</div>
+  </div>
+</div></div>
+
+</body>
+</html>

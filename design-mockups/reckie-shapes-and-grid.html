@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reckie — native shapes + grid</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: #161616; font-family: 'Inter', sans-serif; padding: 44px 14px 90px; color: #fff; }
+  .intro { max-width: 1180px; margin: 0 auto 32px; }
+  .intro h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 27px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .intro p { color: #a5a5a5; font-size: 14px; max-width: 740px; line-height: 1.6; }
+  .row { max-width: 1180px; margin: 0 auto; display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; }
+  .col { width: 372px; }
+  .cap { margin-bottom: 13px; }
+  .cap .nm { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin-bottom: 4px; }
+  .cap .ds { font-size: 12px; color: #9a9a9a; line-height: 1.5; }
+  .phone { width: 372px; height: 808px; border-radius: 38px; overflow: hidden; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); background:#FBFAF8; }
+  .scr { width:100%; height:100%; position:relative; overflow-y:auto; background:#FBFAF8; }
+  .scr::-webkit-scrollbar{display:none;}
+  .sb { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:600; position:sticky; top:0; z-index:10; }
+
+  /* ===== DETAIL with native poster (tall) ===== */
+  .d-top { position:relative; padding:0 0 0; }
+  .d-navrow { position:absolute; top:54px; left:20px; right:20px; z-index:5; display:flex; justify-content:space-between; }
+  .d-navrow .b { width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:16px;color:#16140F;box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+  /* blurred backdrop behind the poster so tall art doesn't leave dead space */
+  .d-back { position:absolute; inset:0; height:430px; background:linear-gradient(168deg,#9DB89E,#36493D); filter:blur(30px) brightness(0.7); transform:scale(1.2); }
+  .d-posterwrap { position:relative; padding:84px 0 22px; display:flex; justify-content:center; }
+  .d-poster { width:210px; aspect-ratio:2/3; border-radius:14px; background:linear-gradient(160deg,#9DB89E,#4E6657); box-shadow:0 12px 32px rgba(0,0,0,0.35); position:relative; overflow:hidden; }
+  .d-poster .catchip { position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); color:#fff; font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:5px 9px; border-radius:20px; }
+  .d-body { background:#FBFAF8; border-radius:24px 24px 0 0; margin-top:-12px; position:relative; padding:24px 22px; }
+  .d-title { font-family:'Fraunces',serif; font-weight:500; font-size:30px; letter-spacing:-0.02em; line-height:1.02; color:#16140F; text-align:center; margin-bottom:8px; }
+  .d-meta { font-size:13px; color:#9C968D; text-align:center; margin-bottom:18px; }
+  .tags { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:22px; }
+  .tag { font-size:12px; font-weight:500; color:#6B6660; background:#F1EDE4; padding:6px 11px; border-radius:30px; }
+  .by { display:flex; align-items:center; gap:11px; margin-bottom:14px; padding-bottom:16px; border-bottom:0.5px solid #EEEAE1; }
+  .by .av { width:38px;height:38px;border-radius:50%;background:#C46B4A;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:15px; }
+  .by .t .top{font-size:11px;color:#9C968D;text-transform:uppercase;letter-spacing:0.05em;}
+  .by .t .nm{font-size:15px;font-weight:600;color:#16140F;}
+  .by .also{margin-left:auto;display:flex;}
+  .by .also span{width:30px;height:30px;border-radius:50%;margin-left:-9px;border:2px solid #FBFAF8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;}
+  .note { font-size:16.5px; line-height:1.5; color:#2A2823; margin-bottom:8px; }
+  .also-line { font-size:13px; color:#9C968D; margin-bottom:22px; } .also-line b{color:#6B6660;font-weight:600;}
+  .acts { display:flex; flex-direction:column; gap:9px; }
+  .acts .pri { width:100%; padding:16px; border-radius:14px; background:#16140F; color:#fff; font-weight:600; font-size:15px; border:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .acts .secrow { display:flex; gap:9px; }
+  .acts .sec { flex:1; padding:14px; border-radius:14px; background:#fff; border:1px solid #E6DECF; color:#16140F; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .acts .sec.reckie { background:#FBF0EE; border-color:#F0D9D5; color:#8B3A2F; }
+
+  /* ===== GRID / CATALOGUE showing per-category shapes ===== */
+  .g { background:#FBFAF8; min-height:100%; }
+  .g .gwm { text-align:center; padding:14px 0 8px; font-family:'Fraunces',serif; font-weight:600; font-size:20px; }
+  .g .gwm .dot{color:#8B3A2F;}
+  .g .sec { padding:18px 20px 6px; }
+  .g .sec .lab { font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#16140F; }
+  .g .sec .lab .ct { color:#B9B2A6; margin-left:6px; }
+  .scrollrow { display:flex; gap:12px; padding:8px 20px 4px; overflow-x:auto; } .scrollrow::-webkit-scrollbar{display:none;}
+
+  /* movie/show poster 2:3 */
+  .poster { flex:0 0 auto; width:120px; }
+  .poster .img { width:120px; aspect-ratio:2/3; border-radius:11px; background:linear-gradient(160deg,#6E5A4A,#2E2620); position:relative; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.12); }
+  .poster .nm { font-size:12.5px; font-weight:600; color:#16140F; margin-top:8px; line-height:1.2; }
+  .poster .by2 { font-size:11px; color:#9C968D; margin-top:1px; }
+
+  /* album/podcast square 1:1 */
+  .sq { flex:0 0 auto; width:128px; }
+  .sq .img { width:128px; aspect-ratio:1/1; border-radius:11px; background:linear-gradient(160deg,#C0473A,#7E2018); box-shadow:0 4px 14px rgba(0,0,0,0.12); }
+  .sq .nm { font-size:12.5px; font-weight:600; color:#16140F; margin-top:8px; line-height:1.2; }
+  .sq .by2 { font-size:11px; color:#9C968D; margin-top:1px; }
+
+  /* place landscape 4:3 */
+  .place { flex:0 0 auto; width:180px; }
+  .place .img { width:180px; aspect-ratio:4/3; border-radius:13px; background:linear-gradient(160deg,#C9A88E,#8A6A4E); box-shadow:0 4px 14px rgba(0,0,0,0.12); position:relative; }
+  .place .img .cnt { position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.92); font-family:'Fraunces',serif; font-weight:600; font-size:11px; color:#16140F; padding:3px 8px; border-radius:20px; }
+  .place .nm { font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:#16140F; margin-top:8px; }
+  .place .by2 { font-size:11px; color:#9C968D; margin-top:1px; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Native image shapes + Save as primary</h1>
+  <p>Left: the detail screen with the hero in the item's true shape — a tall 2:3 poster, centered, on a soft blurred backdrop of itself so there's no dead space. Save is now the big primary action. Right: a catalogue showing each category in its correct aspect ratio — posters tall, albums/podcasts square, places landscape — so nothing ever gets cropped wrong.</p>
+</div>
+
+<div class="row">
+
+  <!-- DETAIL -->
+  <div class="col">
+    <div class="cap"><div class="nm">Detail — native poster, Save primary</div><div class="ds">Poster keeps its 2:3 shape (title never cropped). Blurred self-backdrop fills the space behind it. Save is the hero button; Watch + Reckie sit beneath.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="sb" style="color:#fff;"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="d-top">
+        <div class="d-back"></div>
+        <div class="d-navrow"><div class="b">‹</div><div class="b">⋯</div></div>
+        <div class="d-posterwrap">
+          <div class="d-poster"><div class="catchip">▶ Show</div></div>
+        </div>
+      </div>
+      <div class="d-body">
+        <div class="d-title">Friday Night Lights</div>
+        <div class="d-meta">2006–2011 · 5 seasons · NBC</div>
+        <div class="tags"><span class="tag">Drama</span><span class="tag">Small-town</span><span class="tag">Sports</span><span class="tag">Tearjerker</span></div>
+        <div class="by">
+          <div class="av">T</div>
+          <div class="t"><div class="top">Reckied by</div><div class="nm">Taryn</div></div>
+          <div class="also"><span style="background:#6E7E8E;">M</span><span style="background:#7C8466;">B</span></div>
+        </div>
+        <div class="note">One of my top 2 series of all time. Good American football lore.</div>
+        <div class="also-line"><b>Mia &amp; Brett</b> also reckied this</div>
+        <div class="acts">
+          <button class="pri">✦ Save for later</button>
+          <div class="secrow">
+            <button class="sec">▶ Watch on Hulu</button>
+            <button class="sec reckie">↗ Reckie it</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- GRID -->
+  <div class="col">
+    <div class="cap"><div class="nm">Catalogue — correct shape per category</div><div class="ds">Posters 2:3, albums/podcasts 1:1, places landscape. Each row uses the right ratio so art is never squished or cropped. This is the rule the agent needs.</div></div>
+    <div class="phone"><div class="scr g">
+      <div class="sb" style="color:#16140F;"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+      <div class="gwm">Reckie<span class="dot">.</span></div>
+
+      <div class="sec"><div class="lab">Watch <span class="ct">3</span></div></div>
+      <div class="scrollrow">
+        <div class="poster"><div class="img" style="background:linear-gradient(160deg,#5E7A6B,#36493D);"></div><div class="nm">Friday Night Lights</div><div class="by2">you</div></div>
+        <div class="poster"><div class="img" style="background:linear-gradient(160deg,#7A6E8E,#3A2E4A);"></div><div class="nm">Parenthood</div><div class="by2">Mia</div></div>
+        <div class="poster"><div class="img" style="background:linear-gradient(160deg,#C0709A,#7A3A5A);"></div><div class="nm">Romy &amp; Michele</div><div class="by2">Cam</div></div>
+      </div>
+
+      <div class="sec"><div class="lab">Listen <span class="ct">2</span></div></div>
+      <div class="scrollrow">
+        <div class="sq"><div class="img" style="background:linear-gradient(160deg,#C9C2B6,#8A8478);"></div><div class="nm">Staying Up</div><div class="by2">you</div></div>
+        <div class="sq"><div class="img" style="background:linear-gradient(160deg,#C0473A,#7E2018);"></div><div class="nm">Changes</div><div class="by2">Cam</div></div>
+      </div>
+
+      <div class="sec"><div class="lab">Places <span class="ct">2</span></div></div>
+      <div class="scrollrow">
+        <div class="place"><div class="img"><span class="cnt">7 spots</span></div><div class="nm">Los Angeles</div><div class="by2">Do · Drink · Eat</div></div>
+        <div class="place"><div class="img" style="background:linear-gradient(160deg,#9EAAB8,#5E6E7E);"><span class="cnt">3 spots</span></div><div class="nm">Austin</div><div class="by2">Eat · Drink</div></div>
+      </div>
+
+      <div class="sec"><div class="lab">Read <span class="ct">2</span></div></div>
+      <div class="scrollrow">
+        <div class="poster"><div class="img" style="background:linear-gradient(160deg,#2A2A2A,#0E0E0E);"></div><div class="nm">Amoralman</div><div class="by2">Jannah</div></div>
+        <div class="poster"><div class="img" style="background:linear-gradient(160deg,#E0A030,#B0741A);"></div><div class="nm">A Man Called Ove</div><div class="by2">Deena</div></div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+</body>
+</html>
