@@ -1,5 +1,5 @@
-import { Fraunces_400Regular, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Fraunces_400Regular, Fraunces_500Medium, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -20,7 +20,9 @@ function RootNavigator() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold,
     Fraunces_400Regular,
+    Fraunces_500Medium,
     Fraunces_600SemiBold,
   });
 

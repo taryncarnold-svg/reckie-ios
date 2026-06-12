@@ -158,7 +158,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
   inputWrap: {
     flexDirection: 'row',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   emptyTitle: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink,
   },

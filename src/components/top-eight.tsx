@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/pressable-scale';
 import { Colors, Fonts, Radii } from '@/constants/theme';
-import { CATEGORY_EMOJI } from '@/lib/categories';
+import { CATEGORY_EMOJI, aspectRatioForCategory } from '@/lib/categories';
 import { getRecImageUrl, type Rec, type TopListWithRecs } from '@/lib/types';
 
 type Props = {
@@ -34,6 +34,8 @@ export function TopEight({ entry, onPressRec, onEdit }: Props) {
 
       {entry.recs.map((rec, index) => {
         const imageUrl = getRecImageUrl(rec);
+        const thumbW = 36;
+        const thumbH = thumbW / aspectRatioForCategory(rec.category);
         return (
           <PressableScale
             key={rec.id}
@@ -42,9 +44,14 @@ export function TopEight({ entry, onPressRec, onEdit }: Props) {
             onPress={() => onPressRec?.(rec)}>
             <Text style={[styles.rank, index === 0 && styles.rankFirst]}>{index + 1}</Text>
             {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.thumb} contentFit="cover" transition={150} />
+              <Image
+                source={{ uri: imageUrl }}
+                style={[styles.thumb, { width: thumbW, height: Math.min(thumbH, 48) }]}
+                contentFit="cover"
+                transition={150}
+              />
             ) : (
-              <View style={[styles.thumb, styles.thumbFallback]}>
+              <View style={[styles.thumb, styles.thumbFallback, { width: thumbW, height: Math.min(thumbH, 48) }]}>
                 <Text style={styles.thumbEmoji}>{CATEGORY_EMOJI[rec.category] ?? '✨'}</Text>
               </View>
             )}
@@ -89,7 +96,7 @@ const styles = StyleSheet.create({
     color: Colors.marigoldDeep,
   },
   title: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink,
   },
@@ -116,7 +123,7 @@ const styles = StyleSheet.create({
   },
   rank: {
     width: 24,
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink2,
     textAlign: 'center',
@@ -125,9 +132,7 @@ const styles = StyleSheet.create({
     color: Colors.marigoldDeep,
   },
   thumb: {
-    width: 40,
-    height: 40,
-    borderRadius: 9,
+    borderRadius: 8,
     backgroundColor: Colors.white,
   },
   thumbFallback: {

@@ -203,7 +203,7 @@ export default function SavedScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
   filters: {
     paddingHorizontal: 20,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   emptyTitle: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink,
   },

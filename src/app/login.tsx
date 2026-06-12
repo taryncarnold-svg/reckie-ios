@@ -1,9 +1,11 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { makeRedirectUri } from 'expo-auth-session';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,12 +18,52 @@ import { Colors, Fonts, Radii } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
 const redirectTo = makeRedirectUri();
-
-/** Same fallback order the web app uses in complete-auth-handoff.ts. */
 const OTP_TYPES = ['email', 'magiclink', 'signup'] as const;
+
+type AuthMode = 'phone' | 'email';
+
+const DEMO_CARDS = [
+  {
+    id: 'yours',
+    mine: true,
+    tall: true,
+    label: 'Your reckie',
+    title: 'Tomorrow, and Tomorrow, and Tomorrow',
+    note: '"Couldn\'t put it down."',
+    meta: 'Gabrielle Zevin · Novel',
+    colors: ['#3A6E78', '#1C3A42'] as const,
+    marker: '✓',
+    markerLabel: 'Yours',
+  },
+  {
+    id: 'dad',
+    mine: false,
+    tall: false,
+    label: "Dad's reckie",
+    title: 'Sushi Noz',
+    note: '"Best sushi I\'ve had in LA."',
+    meta: 'Google 4.8 · Los Angeles',
+    colors: ['#C9A88E', '#8A6A4E'] as const,
+    marker: '✦',
+    markerLabel: 'Save',
+  },
+  {
+    id: 'cam',
+    mine: false,
+    tall: true,
+    label: "Cam's reckie",
+    title: 'Severance',
+    note: '"Watch with no spoilers."',
+    meta: '97% RT · Apple TV+',
+    colors: ['#4A465E', '#1F1D2E'] as const,
+    marker: '✦',
+    markerLabel: 'Save',
+  },
+] as const;
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
+  const [authMode, setAuthMode] = useState<AuthMode>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [sending, setSending] = useState(false);
@@ -50,12 +92,8 @@ export default function LoginScreen() {
   const verifyCode = async () => {
     const token = code.replace(/\D/g, '');
     if (token.length < 6 || verifying) return;
-    // Supabase OTP length is configurable (this project sends 8 digits) — accept 6-8.
     setVerifying(true);
     setError(null);
-
-    // The Reckie magic-link email template includes a 6-digit code ({{ .Token }}).
-    // Verifying it directly avoids the email link, which is hardcoded to myreckie.com.
     let lastError = 'That code didn’t work. Codes expire — try requesting a new one.';
     for (const type of OTP_TYPES) {
       const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -63,7 +101,7 @@ export default function LoginScreen() {
         token,
         type,
       });
-      if (!verifyError) return; // session lands via onAuthStateChange
+      if (!verifyError) return;
       lastError = verifyError.message;
     }
     setVerifying(false);
@@ -72,86 +110,147 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { paddingBottom: insets.bottom + 24 }]}
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* Onboarding entrance (DESIGN.md §5): the oxblood panel. */}
-      <View style={[styles.hero, { paddingTop: insets.top + 28 }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
         <Text style={styles.wordmark}>
           Reckie<Text style={styles.wordmarkDot}>.</Text>
         </Text>
-        <View style={styles.heroBottom}>
-          <Text style={styles.eyebrow}>FROM PEOPLE YOU ACTUALLY KNOW</Text>
-          <Text style={styles.headline}>Put your name{'\n'}on it.</Text>
-          <Text style={styles.tagline}>
-            The restaurants, films, and records you vouch for — passed hand to hand.
-          </Text>
-        </View>
-      </View>
 
-      {sent ? (
-        <View style={styles.form}>
-          <Text style={styles.sentHeading}>Check your email</Text>
-          <Text style={styles.sentBody}>
-            We sent a code to {email.trim()}. Enter it below to sign in.
-          </Text>
-          <TextInput
-            style={[styles.input, styles.codeInput]}
-            placeholder="12345678"
-            placeholderTextColor={Colors.muted}
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
-            maxLength={8}
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={verifyCode}
-          />
-          <PressableScale
-            style={styles.button}
-            haptic="medium"
-            onPress={verifyCode}
-            disabled={verifying || code.replace(/\D/g, '').length < 6}>
-            {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign in</Text>}
-          </PressableScale>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <PressableScale
-            style={styles.secondaryButton}
-            haptic="selection"
-            onPress={() => {
-              setSent(false);
-              setError(null);
-            }}>
-            <Text style={styles.secondaryButtonText}>Use a different email</Text>
-          </PressableScale>
-        </View>
-      ) : (
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={Colors.muted}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            autoCorrect={false}
-            returnKeyType="go"
-            onSubmitEditing={sendMagicLink}
-          />
-          <PressableScale style={styles.button} haptic="medium" onPress={sendMagicLink} disabled={sending}>
-            {sending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Send magic link</Text>
-            )}
-          </PressableScale>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Text style={styles.devHint}>Link redirects to {redirectTo}</Text>
-        </View>
-      )}
+        {sent ? (
+          <View style={styles.verifyBlock}>
+            <Text style={styles.sentHeading}>Check your email</Text>
+            <Text style={styles.sentBody}>We sent a code to {email.trim()}.</Text>
+            <TextInput
+              style={[styles.field, styles.codeInput]}
+              placeholder="12345678"
+              placeholderTextColor={Colors.ink3}
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              maxLength={8}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={verifyCode}
+            />
+            <PressableScale
+              style={styles.cta}
+              haptic="medium"
+              onPress={verifyCode}
+              disabled={verifying || code.replace(/\D/g, '').length < 6}>
+              {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Sign in</Text>}
+            </PressableScale>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <PressableScale
+              style={styles.linkBtn}
+              haptic="selection"
+              onPress={() => {
+                setSent(false);
+                setError(null);
+              }}>
+              <Text style={styles.linkText}>Use a different email</Text>
+            </PressableScale>
+          </View>
+        ) : (
+          <>
+            <View style={styles.head}>
+              <Text style={styles.title}>Your favorite people's favorite stuff.</Text>
+              <Text style={styles.sub}>
+                Keep, organize, and share everything you and your people swear by.
+              </Text>
+            </View>
+
+            <View style={styles.cards}>
+              {DEMO_CARDS.map((card) => (
+                <View key={card.id} style={[styles.rc, card.mine && styles.rcMine, card.tall && styles.rcTall]}>
+                  <LinearGradient colors={[...card.colors]} style={[styles.rcImg, card.tall && styles.rcImgTall]} />
+                  <View style={styles.rcMeat}>
+                    <Text style={[styles.rcLabel, card.mine && styles.rcLabelMine]}>{card.label}</Text>
+                    <Text style={styles.rcName} numberOfLines={2}>
+                      {card.title}
+                    </Text>
+                    <Text style={styles.rcNote} numberOfLines={1}>
+                      {card.note}
+                    </Text>
+                    <Text style={styles.rcMeta} numberOfLines={1}>
+                      {card.meta}
+                    </Text>
+                  </View>
+                  <View style={styles.rcSave}>
+                    <View style={[styles.rcSaveBtn, card.mine && styles.rcSaveBtnMine]}>
+                      <Text style={[styles.rcSaveIcon, card.mine && styles.rcSaveIconMine]}>{card.marker}</Text>
+                    </View>
+                    <Text style={[styles.rcSaveLbl, card.mine && styles.rcSaveLblMine]}>{card.markerLabel}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.foot}>
+              <View style={styles.toggle}>
+                <PressableScale
+                  style={[styles.toggleOpt, authMode === 'phone' && styles.toggleOptOn]}
+                  haptic="selection"
+                  onPress={() => setAuthMode('phone')}>
+                  <Text style={[styles.toggleText, authMode === 'phone' && styles.toggleTextOn]}>Phone</Text>
+                </PressableScale>
+                <PressableScale
+                  style={[styles.toggleOpt, authMode === 'email' && styles.toggleOptOn]}
+                  haptic="selection"
+                  onPress={() => setAuthMode('email')}>
+                  <Text style={[styles.toggleText, authMode === 'email' && styles.toggleTextOn]}>Email</Text>
+                </PressableScale>
+              </View>
+
+              {authMode === 'email' ? (
+                <TextInput
+                  style={styles.field}
+                  placeholder="you@example.com"
+                  placeholderTextColor="#B5AFA4"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  autoCorrect={false}
+                  returnKeyType="go"
+                  onSubmitEditing={sendMagicLink}
+                />
+              ) : (
+                <View style={styles.field}>
+                  <Text style={styles.fieldPrefix}>🇺🇸 +1</Text>
+                  <Text style={styles.fieldPlaceholder}>(555) 123-4567</Text>
+                </View>
+              )}
+
+              <PressableScale
+                style={styles.cta}
+                haptic="medium"
+                onPress={authMode === 'email' ? sendMagicLink : undefined}
+                disabled={authMode === 'phone' || sending || !email.trim()}>
+                {sending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.ctaText}>
+                    {authMode === 'email' ? 'Get started' : 'Phone sign-in coming soon'}
+                  </Text>
+                )}
+              </PressableScale>
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              <Text style={styles.reassure}>
+                {authMode === 'email'
+                  ? 'We’ll email a code to verify. Use the address your people know you by.'
+                  : 'We’ll text a code to verify. Use the number your people have for you so they can find you.'}
+              </Text>
+            </View>
+          </>
+        )}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -159,62 +258,196 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
-  hero: {
-    flex: 1,
-    backgroundColor: Colors.oxblood,
-    paddingHorizontal: 28,
-    paddingBottom: 32,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    justifyContent: 'space-between',
-    marginBottom: 24,
+  scroll: {
+    flexGrow: 1,
   },
   wordmark: {
     fontFamily: Fonts.display,
-    fontSize: 26,
-    color: '#fff',
+    fontSize: 23,
+    letterSpacing: -0.4,
+    color: Colors.ink,
+    textAlign: 'center',
+    paddingTop: 8,
+    paddingBottom: 26,
   },
   wordmarkDot: {
-    color: Colors.marigold,
+    color: Colors.oxblood,
   },
-  heroBottom: {
-    gap: 12,
+  head: {
+    paddingHorizontal: 26,
+    marginBottom: 24,
   },
-  eyebrow: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 11.5,
-    letterSpacing: 1.8,
-    color: Colors.marigold,
+  title: {
+    fontFamily: Fonts.displayMedium,
+    fontSize: 32,
+    letterSpacing: -0.5,
+    lineHeight: 34,
+    color: Colors.ink,
+    marginBottom: 12,
   },
-  headline: {
-    fontFamily: Fonts.display,
-    fontSize: 44,
-    lineHeight: 48,
-    color: '#fff',
-  },
-  tagline: {
+  sub: {
     fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 22,
-    color: 'rgba(255,255,255,0.78)',
-    maxWidth: 300,
+    color: Colors.ink2,
   },
-  form: {
-    gap: 12,
-    paddingHorizontal: 28,
+  cards: {
+    paddingHorizontal: 20,
+    gap: 11,
+    marginBottom: 24,
   },
-  input: {
-    backgroundColor: Colors.paper,
+  rc: {
+    backgroundColor: Colors.white,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
-    borderRadius: Radii.input,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    fontFamily: Fonts.sans,
-    fontSize: 16,
+    borderColor: Colors.line2,
+    borderRadius: Radii.lg,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  rcMine: {
+    borderColor: '#E8D5BC',
+    backgroundColor: Colors.paper2,
+  },
+  rcTall: {},
+  rcImg: {
+    width: 58,
+    height: 58,
+    borderRadius: 10,
+  },
+  rcImgTall: {
+    width: 50,
+    height: 70,
+  },
+  rcMeat: {
+    flex: 1,
+    minWidth: 0,
+  },
+  rcLabel: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 10.5,
+    letterSpacing: 0.65,
+    textTransform: 'uppercase',
+    color: Colors.oxblood,
+    marginBottom: 3,
+  },
+  rcLabelMine: {
+    color: Colors.marigoldDeep,
+  },
+  rcName: {
+    fontFamily: Fonts.display,
+    fontSize: 17,
+    letterSpacing: -0.15,
+    lineHeight: 19,
     color: Colors.ink,
+    marginBottom: 3,
+  },
+  rcNote: {
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    color: Colors.ink2,
+    lineHeight: 16,
+    marginBottom: 2,
+  },
+  rcMeta: {
+    fontFamily: Fonts.sans,
+    fontSize: 11.5,
+    color: Colors.ink3,
+  },
+  rcSave: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  rcSaveBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Colors.oxbloodSoft,
+    borderWidth: 1,
+    borderColor: Colors.oxbloodLine,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rcSaveBtnMine: {
+    backgroundColor: Colors.ink,
+    borderColor: Colors.ink,
+  },
+  rcSaveIcon: {
+    fontSize: 16,
+    color: Colors.oxblood,
+  },
+  rcSaveIconMine: {
+    color: '#fff',
+  },
+  rcSaveLbl: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 9.5,
+    color: Colors.oxblood,
+  },
+  rcSaveLblMine: {
+    color: Colors.ink2,
+  },
+  foot: {
+    paddingHorizontal: 24,
+  },
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: '#F1ECE3',
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 10,
+  },
+  toggleOpt: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
+  toggleOptOn: {
+    backgroundColor: Colors.white,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  toggleText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13.5,
+    color: Colors.ink3,
+  },
+  toggleTextOn: {
+    color: Colors.ink,
+  },
+  field: {
+    width: '100%',
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#E0DBD0',
+    borderRadius: Radii.button,
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    color: Colors.ink,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fieldPrefix: {
+    fontFamily: Fonts.sansMedium,
+    color: Colors.ink3,
+  },
+  fieldPlaceholder: {
+    fontFamily: Fonts.sans,
+    color: '#B5AFA4',
   },
   codeInput: {
     textAlign: 'center',
@@ -222,30 +455,34 @@ const styles = StyleSheet.create({
     letterSpacing: 5,
     fontVariant: ['tabular-nums'],
   },
-  button: {
+  cta: {
+    width: '100%',
+    paddingVertical: 16,
     backgroundColor: Colors.ink,
     borderRadius: Radii.button,
-    paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
   },
-  buttonText: {
+  ctaText: {
     fontFamily: Fonts.sansSemiBold,
+    fontSize: 15.5,
     color: '#fff',
-    fontSize: 16,
   },
-  secondaryButton: {
-    alignItems: 'center',
-    paddingVertical: 14,
+  reassure: {
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.ink3,
+    textAlign: 'center',
+    marginTop: 12,
   },
-  secondaryButtonText: {
-    fontFamily: Fonts.sansMedium,
-    color: Colors.oxblood,
-    fontSize: 15,
+  verifyBlock: {
+    paddingHorizontal: 24,
+    gap: 12,
   },
   sentHeading: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 24,
     color: Colors.ink,
   },
@@ -259,11 +496,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     color: Colors.oxblood,
     fontSize: 13,
-  },
-  devHint: {
-    fontFamily: Fonts.sans,
-    fontSize: 11,
-    color: Colors.ink3,
     textAlign: 'center',
+  },
+  linkBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  linkText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 15,
+    color: Colors.oxblood,
   },
 });

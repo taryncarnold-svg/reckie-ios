@@ -186,10 +186,10 @@ export default function CircleScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
   heading: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 28,
     color: Colors.ink,
   },
@@ -209,9 +209,9 @@ const styles = StyleSheet.create({
   activityCard: {
     flexDirection: 'row',
     gap: 12,
-    backgroundColor: Colors.paper,
+    backgroundColor: Colors.white,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    borderColor: Colors.line2,
     borderRadius: Radii.lg,
     padding: 12,
   },
@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
     fontSize: 15.5,
     color: Colors.ink,
   },
-  // The note gets the serif — it's the human voice (DESIGN.md §3).
+  // Notes stay Inter — human voice without serif pull-quote styling.
   activityNote: {
-    fontFamily: Fonts.note,
+    fontFamily: Fonts.sans,
     fontSize: 13.5,
     lineHeight: 19,
-    color: Colors.ink2,
+    color: Colors.noteText,
   },
   activityByline: {
     flexDirection: 'row',

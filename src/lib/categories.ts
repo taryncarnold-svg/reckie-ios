@@ -38,9 +38,23 @@ export function isLocationCategory(category: Category): boolean {
   return LOCATION_CATEGORIES.includes(category);
 }
 
-/** Portrait (2:3) covers: watch/read/play. Square: eat/drink/do and ALL of listen (product decision). */
+/** Portrait (2:3) covers: watch/read. Square: listen/play. Landscape: eat/drink/do. */
 export function isPortraitCategory(category: Category): boolean {
-  return category === 'watch' || category === 'read' || category === 'play';
+  return category === 'watch' || category === 'read';
+}
+
+/** Native art ratio per DESIGN.md §3 — width / height for `aspectRatio` style. */
+export function aspectRatioForCategory(category: Category): number {
+  if (category === 'watch' || category === 'read') return 2 / 3;
+  if (category === 'eat' || category === 'drink' || category === 'do') return 4 / 3;
+  return 1;
+}
+
+/** Horizontal-scroll tile widths from reckie-shapes-and-grid.html. */
+export function catalogueTileWidth(category: Category | 'place'): number {
+  if (category === 'place') return 180;
+  if (category === 'listen' || category === 'play') return 128;
+  return 120;
 }
 
 export function normalizeCityKey(city: string): string {

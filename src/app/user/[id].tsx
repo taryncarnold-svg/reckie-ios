@@ -164,7 +164,7 @@ export default function UserProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
   profileRow: {
     flexDirection: 'row',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 28,
     color: Colors.ink,
   },
@@ -215,12 +215,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.line,
   },
   heroNumber: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 30,
     color: Colors.oxblood,
   },
   heroNumberInk: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 30,
     color: Colors.ink,
   },

@@ -5,6 +5,7 @@ import {
   BottomSheetTextInput,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import {
@@ -23,7 +24,7 @@ import { Avatar } from '@/components/avatar';
 import { PressableScale } from '@/components/pressable-scale';
 import { CategoryTints, Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
-import { CATEGORY_EMOJI, isPortraitCategory } from '@/lib/categories';
+import { aspectRatioForCategory, CATEGORY_EMOJI } from '@/lib/categories';
 import {
   addCosign,
   deleteRec,
@@ -41,9 +42,10 @@ import { getRecImageUrl, type CosignWithProfile, type Profile, type Rec, type Tr
 
 type OpenOptions = {
   rec: Rec;
-  /** Called after any mutation so the opening screen can refresh. */
   onChanged?: () => void;
 };
+
+const POSTER_WIDTH = 210;
 
 const ReckieDetailContext = createContext<{ openReckie: (options: OpenOptions) => void }>({
   openReckie: () => {},
@@ -58,7 +60,7 @@ function categoryLabel(rec: Rec): string {
     eat: 'Eat',
     drink: 'Drink',
     do: 'Do',
-    watch: rec.metadata?.type === 'series' ? 'Show' : 'Watch',
+    watch: rec.metadata?.type === 'series' ? 'Show' : 'Movie',
     read: 'Read',
     play: 'Play',
     listen: 'Listen',
@@ -72,6 +74,7 @@ function contextLine(rec: Rec): string | null {
   if (rec.metadata?.artist) parts.push(String(rec.metadata.artist));
   if (rec.metadata?.author) parts.push(String(rec.metadata.author));
   if (rec.metadata?.watch_provider) parts.push(String(rec.metadata.watch_provider));
+  if (rec.city && !parts.length) parts.push(rec.city);
   return parts.length ? parts.join(' · ') : null;
 }
 
@@ -84,6 +87,22 @@ function externalScore(rec: Rec): string | null {
 
 function displayName(profile: Profile | null): string {
   return profile?.name ?? profile?.handle ?? 'Someone';
+}
+
+function formatCosignLine(cosigns: CosignWithProfile[]): string | null {
+  const names = cosigns.map((c) => displayName(c.profile)).slice(0, 3);
+  if (names.length === 0) return null;
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} & ${names[1]}`;
+  return `${names[0]}, ${names[1]} & ${names[2]}`;
+}
+
+function NavButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <PressableScale style={styles.navBtn} haptic="selection" onPress={onPress}>
+      <Text style={styles.navBtnText}>{label}</Text>
+    </PressableScale>
+  );
 }
 
 export function ReckieDetailProvider({ children }: { children: ReactNode }) {
@@ -121,7 +140,6 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
     sheetRef.current?.present();
   }, []);
 
-  // Load the social layer when a reckie opens.
   useEffect(() => {
     if (!rec || !userId) return;
     let cancelled = false;
@@ -176,7 +194,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.4} />
+      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.45} />
     ),
     []
   );
@@ -280,11 +298,13 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
   };
 
   const imageUrl = rec ? getRecImageUrl(rec) : null;
-  const portrait = rec ? isPortraitCategory(rec.category) : false;
+  const aspectRatio = rec ? aspectRatioForCategory(rec.category) : 2 / 3;
   const score = rec ? externalScore(rec) : null;
   const context = rec ? contextLine(rec) : null;
   const otherCosigns = cosigns.filter((c) => c.user_id !== rec?.user_id);
   const alreadyCosigned = !!userId && cosigns.some((c) => c.user_id === userId);
+  const cosignLine = formatCosignLine(otherCosigns);
+  const tagList = rec ? [...(rec.tags ?? []), ...(score ? [score] : [])] : [];
 
   return (
     <ReckieDetailContext.Provider value={{ openReckie }}>
@@ -296,136 +316,195 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         backgroundStyle={styles.sheetBackground}
-        handleIndicatorStyle={styles.handle}>
+        handleIndicatorStyle={styles.handleHidden}>
         <BottomSheetScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+          showsVerticalScrollIndicator={false}>
           {rec && !composing && (
             <>
-              {/* Hero image with category + city chip */}
-              <View style={[styles.hero, { aspectRatio: portrait ? 16 / 10 : 16 / 9 }]}>
+              {/* Hero: blurred self-backdrop + native-shape poster (mockup left) */}
+              <View style={styles.heroZone}>
                 {imageUrl ? (
-                  <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+                  <>
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.heroBackdrop}
+                      contentFit="cover"
+                      blurRadius={28}
+                      transition={200}
+                    />
+                    <View style={styles.heroBackdropDim} />
+                  </>
                 ) : (
-                  <View style={[StyleSheet.absoluteFill, { backgroundColor: CategoryTints[rec.category], opacity: 0.25 }]} />
+                  <LinearGradient
+                    colors={[CategoryTints[rec.category], '#36493D']}
+                    start={{ x: 0.2, y: 0 }}
+                    end={{ x: 0.8, y: 1 }}
+                    style={styles.heroBackdrop}
+                  />
                 )}
-                <View style={styles.heroChip}>
-                  <Text style={styles.heroChipText}>
-                    {CATEGORY_EMOJI[rec.category]} {categoryLabel(rec)}
-                    {rec.city ? ` · ${rec.city}` : ''}
-                  </Text>
+
+                <View style={styles.navRow}>
+                  <NavButton label="‹" onPress={() => sheetRef.current?.dismiss()} />
+                  <NavButton
+                    label="⋯"
+                    onPress={() => {
+                      if (isOwner) confirmDelete();
+                      else setStackExpanded(!stackExpanded);
+                    }}
+                  />
+                </View>
+
+                <View style={styles.posterWrap}>
+                  <View style={[styles.poster, { width: POSTER_WIDTH, aspectRatio }]}>
+                    {imageUrl ? (
+                      <Image
+                        source={{ uri: imageUrl }}
+                        style={StyleSheet.absoluteFill}
+                        contentFit="cover"
+                        transition={180}
+                      />
+                    ) : (
+                      <LinearGradient
+                        colors={[CategoryTints[rec.category], '#4E6657']}
+                        style={StyleSheet.absoluteFill}
+                      />
+                    )}
+                    <View style={styles.catChip}>
+                      <Text style={styles.catChipText}>
+                        {CATEGORY_EMOJI[rec.category]} {categoryLabel(rec)}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </View>
 
-              <Text style={styles.title}>{rec.title}</Text>
-              {context ? <Text style={styles.context}>{context}</Text> : null}
+              {/* Paper sheet — content rises over the backdrop */}
+              <View style={styles.bodySheet}>
+                <Text style={styles.title}>{rec.title}</Text>
+                {context ? <Text style={styles.meta}>{context}</Text> : null}
 
-              {/* Who reckied it — one clean line, no date */}
-              <View style={styles.attribution}>
-                <Avatar profile={owner} size={22} />
-                <Text style={styles.attributionText} numberOfLines={1}>
-                  Reckied by {isOwner ? 'you' : displayName(owner)}
-                </Text>
-                {otherCosigns.length > 0 && (
-                  <PressableScale
-                    style={styles.facesRow}
-                    haptic="selection"
-                    onPress={() => setStackExpanded(!stackExpanded)}>
-                    {otherCosigns.slice(0, 3).map((cosign, index) => (
-                      <View key={cosign.id} style={[styles.face, { marginLeft: index === 0 ? 0 : -7 }]}>
-                        <Avatar profile={cosign.profile} size={20} />
+                {tagList.length > 0 && (
+                  <View style={styles.tags}>
+                    {tagList.map((tag) => (
+                      <View key={tag} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
                       </View>
                     ))}
-                    <Text style={styles.facesCount}>+{otherCosigns.length}</Text>
-                  </PressableScale>
-                )}
-              </View>
-
-              {/* The note — a text from a friend, not a pull-quote */}
-              {rec.note ? <Text style={styles.note}>{rec.note.trim()}</Text> : null}
-
-              {/* Lineage, subtle */}
-              {originatorName ? (
-                <Text style={styles.lineage}>originally {originatorName}’s find</Text>
-              ) : null}
-
-              {/* Co-sign stack, expandable */}
-              {otherCosigns.length > 0 && stackExpanded && (
-                <View style={styles.stack}>
-                  {otherCosigns.map((cosign) => (
-                    <View key={cosign.id} style={styles.stackRow}>
-                      <Avatar profile={cosign.profile} size={26} />
-                      <View style={styles.stackText}>
-                        <Text style={styles.stackName}>{displayName(cosign.profile)}</Text>
-                        {cosign.note ? <Text style={styles.stackTake}>{cosign.note}</Text> : null}
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Trust signal + tags */}
-              {(score || (rec.tags?.length ?? 0) > 0) && (
-                <View style={styles.chipRow}>
-                  {score ? (
-                    <View style={styles.scoreChip}>
-                      <Text style={styles.scoreChipText}>{score}</Text>
-                    </View>
-                  ) : null}
-                  {(rec.tags ?? []).map((tag) => (
-                    <View key={tag} style={styles.tagPill}>
-                      <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Primary action-link (silent affiliate slot) */}
-              <View style={styles.footer}>
-                {rec.primary_action_url && (
-                  <PressableScale
-                    style={styles.primaryCta}
-                    haptic="medium"
-                    onPress={() => Linking.openURL(rec.primary_action_url!)}>
-                    <Text style={styles.primaryCtaText}>{rec.primary_action_label ?? 'Open'}</Text>
-                  </PressableScale>
-                )}
-
-                {/* Loop actions: Save · I tried this · Reckie it */}
-                {!isOwner && (
-                  <View style={styles.loopRow}>
-                    <PressableScale
-                      style={[styles.loopBtn, saved && styles.loopBtnActive]}
-                      haptic="light"
-                      onPress={toggleSave}
-                      disabled={busy}>
-                      <Text style={[styles.loopBtnText, saved && styles.loopBtnTextActive]}>
-                        {saved ? 'Saved ✓' : 'Save'}
-                      </Text>
-                    </PressableScale>
-                    <PressableScale
-                      style={[styles.loopBtn, !!tried && styles.loopBtnActive]}
-                      haptic="light"
-                      onPress={toggleTried}
-                      disabled={busy}>
-                      <Text style={[styles.loopBtnText, !!tried && styles.loopBtnTextActive]}>
-                        {tried ? 'Tried ✓' : 'I tried this'}
-                      </Text>
-                    </PressableScale>
-                    <PressableScale
-                      style={[styles.loopBtn, alreadyCosigned && styles.loopBtnActive]}
-                      haptic="light"
-                      onPress={() => {
-                        if (!alreadyCosigned) setComposing(true);
-                      }}
-                      disabled={busy || alreadyCosigned}>
-                      <Text style={[styles.loopBtnText, alreadyCosigned && styles.loopBtnTextActive]}>
-                        {alreadyCosigned ? 'Reckied ✓' : 'Reckie it'}
-                      </Text>
-                    </PressableScale>
                   </View>
                 )}
 
-                {/* Private life-log, revealed once tried */}
+                <View style={styles.byline}>
+                  <Avatar profile={owner} size={38} />
+                  <View style={styles.bylineText}>
+                    <Text style={styles.byEyebrow}>Reckied by</Text>
+                    <Text style={styles.byName}>{isOwner ? 'You' : displayName(owner)}</Text>
+                  </View>
+                  {otherCosigns.length > 0 && (
+                    <View style={styles.alsoFaces}>
+                      {otherCosigns.slice(0, 2).map((cosign, index) => (
+                        <View
+                          key={cosign.id}
+                          style={[styles.alsoFace, index > 0 && { marginLeft: -9 }]}>
+                          <Avatar profile={cosign.profile} size={30} />
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {rec.note ? <Text style={styles.note}>{rec.note.trim()}</Text> : null}
+
+                {originatorName ? (
+                  <Text style={styles.lineage}>originally {originatorName}’s find</Text>
+                ) : null}
+
+                {cosignLine ? (
+                  <Text style={styles.alsoLine}>
+                    <Text style={styles.alsoLineBold}>{cosignLine}</Text> also reckied this
+                  </Text>
+                ) : null}
+
+                {stackExpanded && otherCosigns.length > 0 && (
+                  <View style={styles.stack}>
+                    {otherCosigns.map((cosign) => (
+                      <View key={cosign.id} style={styles.stackRow}>
+                        <Avatar profile={cosign.profile} size={26} />
+                        <View style={styles.stackText}>
+                          <Text style={styles.stackName}>{displayName(cosign.profile)}</Text>
+                          {cosign.note ? <Text style={styles.stackTake}>{cosign.note}</Text> : null}
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                <View style={styles.acts}>
+                  {!isOwner && (
+                    <>
+                      <PressableScale
+                        style={[styles.savePrimary, saved && styles.savePrimaryOn]}
+                        haptic="medium"
+                        onPress={toggleSave}
+                        disabled={busy}>
+                        <Text style={styles.savePrimaryText}>
+                          {saved ? '✦ Saved' : '✦ Save for later'}
+                        </Text>
+                      </PressableScale>
+
+                      <View style={rec.primary_action_url ? styles.secRow : undefined}>
+                        {rec.primary_action_url ? (
+                          <PressableScale
+                            style={styles.secBtn}
+                            haptic="light"
+                            onPress={() => Linking.openURL(rec.primary_action_url!)}>
+                            <Text style={styles.secBtnText} numberOfLines={1}>
+                              ▶ {rec.primary_action_label ?? 'Open'}
+                            </Text>
+                          </PressableScale>
+                        ) : null}
+                        <PressableScale
+                          style={[
+                            styles.secBtn,
+                            styles.reckieBtn,
+                            !rec.primary_action_url && { flex: undefined, width: '100%' },
+                            alreadyCosigned && styles.reckieBtnOn,
+                          ]}
+                          haptic="light"
+                          onPress={() => {
+                            if (!alreadyCosigned) setComposing(true);
+                          }}
+                          disabled={busy || alreadyCosigned}>
+                          <Text style={[styles.reckieBtnText, alreadyCosigned && styles.reckieBtnTextOn]}>
+                            {alreadyCosigned ? 'Reckied ✓' : '↗ Reckie it'}
+                          </Text>
+                        </PressableScale>
+                      </View>
+
+                      <PressableScale style={styles.triedLink} haptic="selection" onPress={toggleTried} disabled={busy}>
+                        <Text style={[styles.triedLinkText, !!tried && styles.triedLinkTextOn]}>
+                          {tried ? '✓ I tried this' : 'Mark as tried'}
+                        </Text>
+                      </PressableScale>
+                    </>
+                  )}
+
+                  {isOwner && rec.primary_action_url && (
+                    <PressableScale
+                      style={styles.savePrimary}
+                      haptic="medium"
+                      onPress={() => Linking.openURL(rec.primary_action_url!)}>
+                      <Text style={styles.savePrimaryText}>▶ {rec.primary_action_label ?? 'Open'}</Text>
+                    </PressableScale>
+                  )}
+
+                  {isOwner && (
+                    <PressableScale style={styles.deleteBtn} haptic="light" onPress={confirmDelete}>
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </PressableScale>
+                  )}
+                </View>
+
                 {!isOwner && tried && (
                   <View style={styles.triedPanel}>
                     <View style={styles.triedHeader}>
@@ -449,23 +528,16 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                     />
                   </View>
                 )}
-
-                {isOwner && (
-                  <PressableScale style={styles.deleteBtn} haptic="light" onPress={confirmDelete}>
-                    <Text style={styles.deleteText}>Delete</Text>
-                  </PressableScale>
-                )}
               </View>
             </>
           )}
 
-          {/* "Reckie it" compose: pass it on with your take */}
           {rec && composing && (
-            <View style={styles.compose}>
+            <View style={[styles.compose, { paddingBottom: insets.bottom }]}>
               <Text style={styles.composeTitle}>Reckie {rec.title}</Text>
               <Text style={styles.composeHint}>
-                Your take — like a text to a friend. It joins {isOwner ? 'the' : `${displayName(owner)}’s`} co-sign
-                stack and lands on your shelf.
+                Your take — like a text to a friend. It joins {isOwner ? 'the' : `${displayName(owner)}’s`}{' '}
+                co-sign stack and lands on your shelf.
               </Text>
               <BottomSheetTextInput
                 style={styles.composeInput}
@@ -477,11 +549,11 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                 autoFocus
               />
               <PressableScale
-                style={[styles.primaryCta, !take.trim() && styles.primaryCtaDisabled]}
+                style={[styles.savePrimary, !take.trim() && styles.savePrimaryDisabled]}
                 haptic="medium"
                 onPress={submitPassOn}
                 disabled={busy || !take.trim()}>
-                {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryCtaText}>Reckie it</Text>}
+                {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.savePrimaryText}>Reckie it</Text>}
               </PressableScale>
               <PressableScale style={styles.composeSecondary} haptic="selection" onPress={submitCosignOnly} disabled={busy}>
                 <Text style={styles.composeSecondaryText}>Just co-sign, don’t add to my shelf</Text>
@@ -505,97 +577,193 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor: Colors.white,
-    borderRadius: 24,
-  },
-  handle: {
-    backgroundColor: Colors.line,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 6,
-  },
-  hero: {
-    borderRadius: Radii.lg,
-    overflow: 'hidden',
     backgroundColor: Colors.paper,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    borderTopLeftRadius: Radii.sheet,
+    borderTopRightRadius: Radii.sheet,
   },
-  heroChip: {
+  handleHidden: {
+    opacity: 0,
+    height: 4,
+  },
+  heroZone: {
+    height: 400,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  heroBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    transform: [{ scale: 1.15 }],
+  },
+  heroBackdropDim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  navRow: {
+    position: 'absolute',
+    top: 8,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 5,
+  },
+  navBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  navBtnText: {
+    fontSize: 18,
+    color: Colors.ink,
+    lineHeight: 20,
+  },
+  posterWrap: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 22,
+    zIndex: 2,
+  },
+  poster: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  catChip: {
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: Radii.pill,
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 5,
   },
-  heroChipText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 11.5,
-    color: Colors.ink,
+  catChipText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: '#fff',
+  },
+  bodySheet: {
+    backgroundColor: Colors.paper,
+    borderTopLeftRadius: Radii.sheet,
+    borderTopRightRadius: Radii.sheet,
+    marginTop: -12,
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 8,
   },
   title: {
-    marginTop: 16,
-    fontFamily: Fonts.display,
-    fontSize: 23,
+    fontFamily: Fonts.displayMedium,
+    fontSize: 30,
+    letterSpacing: -0.6,
+    lineHeight: 31,
     color: Colors.ink,
-    lineHeight: 28,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  context: {
-    marginTop: 3,
+  meta: {
     fontFamily: Fonts.sans,
-    fontSize: 13.5,
-    color: Colors.ink2,
+    fontSize: 13,
+    color: Colors.ink3,
+    textAlign: 'center',
+    marginBottom: 18,
   },
-  attribution: {
+  tags: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 7,
+    marginBottom: 22,
   },
-  attributionText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13.5,
-    color: Colors.ink,
-    flexShrink: 1,
+  tag: {
+    backgroundColor: Colors.tagBg,
+    borderRadius: Radii.pill,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
   },
-  facesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 2,
-  },
-  face: {
-    borderWidth: 1.5,
-    borderColor: Colors.white,
-    borderRadius: 11,
-  },
-  facesCount: {
-    marginLeft: 5,
+  tagText: {
     fontFamily: Fonts.sansMedium,
     fontSize: 12,
     color: Colors.ink2,
   },
-  note: {
-    marginTop: 14,
-    fontFamily: Fonts.note,
-    fontSize: 16.5,
-    lineHeight: 24,
+  byline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    marginBottom: 14,
+    paddingBottom: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#EEEAE1',
+  },
+  bylineText: {
+    flex: 1,
+    gap: 1,
+  },
+  byEyebrow: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 11,
+    letterSpacing: 0.55,
+    textTransform: 'uppercase',
+    color: Colors.ink3,
+  },
+  byName: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 15,
     color: Colors.ink,
   },
+  alsoFaces: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alsoFace: {
+    borderWidth: 2,
+    borderColor: Colors.paper,
+    borderRadius: 16,
+  },
+  note: {
+    fontFamily: Fonts.sans,
+    fontSize: 16.5,
+    lineHeight: 25,
+    color: Colors.noteText,
+    marginBottom: 8,
+  },
   lineage: {
-    marginTop: 8,
     fontFamily: Fonts.sans,
     fontSize: 12,
     color: Colors.ink3,
+    marginBottom: 8,
+  },
+  alsoLine: {
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    color: Colors.ink3,
+    marginBottom: 22,
+  },
+  alsoLineBold: {
+    fontFamily: Fonts.sansSemiBold,
+    color: Colors.ink2,
   },
   stack: {
-    marginTop: 14,
-    backgroundColor: Colors.oxbloodSoft,
+    marginBottom: 18,
+    backgroundColor: Colors.paper2,
     borderRadius: Radii.lg,
     padding: 14,
     gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.line,
   },
   stackRow: {
     flexDirection: 'row',
@@ -616,83 +784,80 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: Colors.ink2,
   },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-    marginTop: 14,
+  acts: {
+    gap: 9,
   },
-  scoreChip: {
-    backgroundColor: Colors.marigoldSoft,
-    borderRadius: Radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  scoreChipText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    color: Colors.marigoldDeep,
-  },
-  tagPill: {
-    backgroundColor: Colors.paper,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
-    borderRadius: Radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  tagText: {
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    color: Colors.ink2,
-  },
-  footer: {
-    marginTop: 20,
-    gap: 10,
-  },
-  primaryCta: {
-    backgroundColor: Colors.oxblood,
+  savePrimary: {
+    width: '100%',
+    paddingVertical: 16,
     borderRadius: Radii.button,
-    paddingVertical: 14,
+    backgroundColor: Colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    minHeight: 52,
   },
-  primaryCtaDisabled: {
+  savePrimaryOn: {
+    backgroundColor: Colors.ink2,
+  },
+  savePrimaryDisabled: {
     opacity: 0.4,
   },
-  primaryCtaText: {
+  savePrimaryText: {
     fontFamily: Fonts.sansSemiBold,
-    color: '#fff',
     fontSize: 15,
+    color: '#fff',
   },
-  loopRow: {
+  secRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 9,
   },
-  loopBtn: {
+  secBtn: {
     flex: 1,
-    backgroundColor: Colors.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderStrong,
+    paddingVertical: 14,
     borderRadius: Radii.button,
-    paddingVertical: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.buttonBorder,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
   },
-  loopBtnActive: {
-    backgroundColor: Colors.ink,
-    borderColor: Colors.ink,
-  },
-  loopBtnText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
+  secBtnText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
     color: Colors.ink,
   },
-  loopBtnTextActive: {
-    color: Colors.white,
+  reckieBtn: {
+    backgroundColor: Colors.oxbloodSoft,
+    borderColor: Colors.oxbloodLine,
+  },
+  reckieBtnOn: {
+    backgroundColor: Colors.paper,
+    borderColor: Colors.line,
+  },
+  reckieBtnText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
+    color: Colors.oxblood,
+  },
+  reckieBtnTextOn: {
+    color: Colors.ink2,
+  },
+  triedLink: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  triedLinkText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    color: Colors.ink3,
+  },
+  triedLinkTextOn: {
+    color: Colors.ink2,
   },
   triedPanel: {
-    backgroundColor: Colors.paper,
+    marginTop: 16,
+    backgroundColor: Colors.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.line,
     borderRadius: Radii.lg,
@@ -705,7 +870,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   triedLabel: {
-    fontFamily: Fonts.sansSemiBold,
+    fontFamily: Fonts.sansBold,
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
@@ -728,7 +893,7 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   deleteText: {
     fontFamily: Fonts.sansMedium,
@@ -736,12 +901,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   compose: {
+    paddingHorizontal: 22,
+    paddingTop: 12,
     gap: 12,
-    paddingTop: 8,
   },
   composeTitle: {
-    fontFamily: Fonts.display,
-    fontSize: 21,
+    fontFamily: Fonts.displayMedium,
+    fontSize: 24,
     color: Colors.ink,
   },
   composeHint: {
@@ -751,13 +917,13 @@ const styles = StyleSheet.create({
     color: Colors.ink2,
   },
   composeInput: {
-    backgroundColor: Colors.paper,
+    backgroundColor: Colors.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.line,
     borderRadius: Radii.input,
     padding: 14,
     minHeight: 96,
-    fontFamily: Fonts.note,
+    fontFamily: Fonts.sans,
     fontSize: 16,
     lineHeight: 23,
     color: Colors.ink,

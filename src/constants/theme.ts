@@ -7,32 +7,38 @@ import type { Category } from '@/lib/types';
  * punctuation. Never pure #000 ink, never cold grey secondary text.
  */
 export const Colors = {
-  // Base field
+  // Base field (DESIGN.md §1)
   white: '#FFFFFF',
   paper: '#FBFAF8',
+  paper2: '#FFFDF8',
   line: '#ECEAE5',
+  line2: '#EBE7DE',
   lineSoft: '#F3F1EC',
-  ink: '#1C1A17',
+  ink: '#16140F',
   ink2: '#6B6660',
   ink3: '#9C968D',
+  noteText: '#2A2823',
 
   // Accents — punctuation, 1–2 hits per screen
   oxblood: '#8B3A2F',
   oxbloodDeep: '#6E2B22',
   oxbloodSoft: '#FBF0EE',
+  oxbloodLine: '#F0D9D5',
   marigold: '#D99A2B',
   marigoldDeep: '#B97D15',
   marigoldSoft: '#FBF3E2',
+  tagBg: '#F1EDE4',
+  buttonBorder: '#E6DECF',
 
   // Legacy aliases (older screens reference these; design pass will migrate them)
   background: '#FFFFFF',
-  foreground: '#1C1A17',
+  foreground: '#16140F',
   card: '#FBFAF8',
   accent: '#8B3A2F',
   muted: '#6B6660',
   border: '#ECEAE5',
-  borderStrong: 'rgba(28, 26, 23, 0.14)',
-  overlay: 'rgba(28, 26, 23, 0.45)',
+  borderStrong: 'rgba(22, 20, 15, 0.14)',
+  overlay: 'rgba(22, 20, 15, 0.45)',
 } as const;
 
 /** Muted, low-saturation category tints ("faded postcard"). */
@@ -52,8 +58,10 @@ export const Fonts = {
   sans: 'Inter_400Regular',
   sansMedium: 'Inter_500Medium',
   sansSemiBold: 'Inter_600SemiBold',
-  /** Fraunces — rare guest: wordmark, names, display titles, the note. */
+  sansBold: 'Inter_700Bold',
+  /** Fraunces — rare guest: wordmark, item titles, names. Weight 500 on detail titles. */
   display: 'Fraunces_600SemiBold',
+  displayMedium: 'Fraunces_500Medium',
   note: 'Fraunces_400Regular',
   /** Legacy aliases (system fonts) — design pass will migrate remaining uses. */
   serif: Platform.select({ ios: 'ui-serif', default: 'serif' })!,
@@ -73,9 +81,10 @@ export const Spacing = {
 export const Radii = {
   sm: 8,
   input: 13,
-  button: 13,
+  button: 14,
   md: 14,
   lg: 16,
   xl: 22,
+  sheet: 24,
   pill: 999,
 } as const;

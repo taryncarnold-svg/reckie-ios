@@ -4,30 +4,31 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/pressable-scale';
 import { CategoryTints, Colors, Fonts, Radii } from '@/constants/theme';
-import { isPortraitCategory } from '@/lib/categories';
+import { aspectRatioForCategory, catalogueTileWidth, isLocationCategory } from '@/lib/categories';
 import { getRecImageUrl, type Rec } from '@/lib/types';
 
 type Props = {
   rec: Rec;
-  width: number;
-  /** "Reckied by [name]" caption, for saved/circle contexts. */
+  /** Override width; defaults from category (mockup sizes). */
+  width?: number;
   reckiedBy?: string | null;
   onPress?: () => void;
 };
 
 /**
- * Poster tile (DESIGN.md §5): Letterboxd-style. Portrait = 2:3 image, subtle
- * bottom gradient, small bold sans title over it. Square = image + title below.
+ * Catalogue tile (mockup grid): native aspect ratio, title below art,
+ * attributor in --ink-3. Places use Fraunces on the title.
  */
 export function ReckieCard({ rec, width, reckiedBy, onPress }: Props) {
-  const portrait = isPortraitCategory(rec.category);
-  const height = portrait ? width * (3 / 2) : width;
+  const tileWidth = width ?? catalogueTileWidth(rec.category);
+  const ratio = aspectRatioForCategory(rec.category);
   const imageUrl = getRecImageUrl(rec);
   const tint = CategoryTints[rec.category];
+  const place = isLocationCategory(rec.category);
 
   return (
-    <PressableScale style={{ width }} onPress={onPress} haptic="light">
-      <View style={[styles.media, { width, height }]}>
+    <PressableScale style={{ width: tileWidth }} onPress={onPress} haptic="light">
+      <View style={[styles.media, { width: tileWidth, aspectRatio: ratio }]}>
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
@@ -37,25 +38,12 @@ export function ReckieCard({ rec, width, reckiedBy, onPress }: Props) {
             recyclingKey={rec.id}
           />
         ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: 0.3 }]} />
-        )}
-        {portrait && (
-          <>
-            <LinearGradient
-              colors={['transparent', 'rgba(20,17,14,0.72)']}
-              style={styles.gradient}
-            />
-            <Text style={styles.overlayTitle} numberOfLines={2}>
-              {rec.title}
-            </Text>
-          </>
+          <LinearGradient colors={[tint, '#36493D']} style={StyleSheet.absoluteFill} />
         )}
       </View>
-      {!portrait && (
-        <Text style={styles.belowTitle} numberOfLines={2}>
-          {rec.title}
-        </Text>
-      )}
+      <Text style={[styles.title, place && styles.titlePlace]} numberOfLines={2}>
+        {rec.title}
+      </Text>
       {reckiedBy ? (
         <Text style={styles.caption} numberOfLines={1}>
           {reckiedBy}
@@ -67,38 +55,28 @@ export function ReckieCard({ rec, width, reckiedBy, onPress }: Props) {
 
 const styles = StyleSheet.create({
   media: {
-    borderRadius: Radii.md,
+    borderRadius: 11,
     overflow: 'hidden',
     backgroundColor: Colors.paper,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 2 },
   },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '46%',
-  },
-  overlayTitle: {
-    position: 'absolute',
-    left: 8,
-    right: 8,
-    bottom: 8,
+  title: {
+    marginTop: 8,
     fontFamily: Fonts.sansSemiBold,
-    fontSize: 12,
-    lineHeight: 15,
-    color: '#fff',
-  },
-  belowTitle: {
-    marginTop: 7,
-    fontFamily: Fonts.sansMedium,
     fontSize: 12.5,
-    lineHeight: 16,
+    lineHeight: 15,
     color: Colors.ink,
   },
+  titlePlace: {
+    fontFamily: Fonts.display,
+    fontSize: 15,
+    lineHeight: 18,
+  },
   caption: {
-    marginTop: 2,
+    marginTop: 1,
     fontFamily: Fonts.sans,
     fontSize: 11,
     color: Colors.ink3,

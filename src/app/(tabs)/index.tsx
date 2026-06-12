@@ -23,6 +23,7 @@ import {
 } from '@/lib/data';
 import { useDataChanged } from '@/lib/refresh';
 import { supabase } from '@/lib/supabase';
+import { aspectRatioForCategory } from '@/lib/categories';
 import { getRecImageUrl, type Profile, type Rec, type TopListWithRecs } from '@/lib/types';
 
 /**
@@ -184,6 +185,7 @@ export default function HomeScreen() {
         {/* ——— Catalogue ——— */}
         <CategorizedShelves
           recs={myRecs}
+          selfLabel="you"
           emptyMessage="No reckies yet"
           emptyHint="Tap + and put your name on something good."
           onPressRec={(rec) => openReckie({ rec, onChanged: load })}
@@ -206,6 +208,8 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
   const imageUrl = getRecImageUrl(item.rec);
   const who = item.profile.name ?? item.profile.handle ?? 'Someone';
   const payoff = item.kind === 'cosign_payoff';
+  const thumbW = 40;
+  const thumbH = thumbW / aspectRatioForCategory(item.rec.category);
 
   return (
     <PressableScale style={[styles.pulseRow, !last && styles.pulseRowBorder]} haptic="light" onPress={onPress}>
@@ -219,7 +223,12 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
         {payoff && <Text style={styles.payoffMark}>✺ your taste, traveling</Text>}
       </View>
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={styles.pulseThumb} contentFit="cover" transition={150} />
+        <Image
+          source={{ uri: imageUrl }}
+          style={[styles.pulseThumb, { width: thumbW, height: Math.min(thumbH, 52) }]}
+          contentFit="cover"
+          transition={150}
+        />
       ) : null}
     </PressableScale>
   );
@@ -228,7 +237,7 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.paper,
   },
   pulseSection: {
     marginBottom: 18,
@@ -274,16 +283,14 @@ const styles = StyleSheet.create({
     color: Colors.marigoldDeep,
   },
   pulseThumb: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    borderRadius: 8,
     backgroundColor: Colors.lineSoft,
   },
   stamp: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
-    backgroundColor: Colors.marigoldSoft,
+    backgroundColor: Colors.oxbloodSoft,
     borderRadius: Radii.lg,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -294,7 +301,7 @@ const styles = StyleSheet.create({
   },
   stampFace: {
     borderWidth: 2,
-    borderColor: Colors.marigoldSoft,
+    borderColor: Colors.oxbloodSoft,
     borderRadius: 15,
   },
   stampText: {
@@ -317,7 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 28,
     color: Colors.ink,
   },
@@ -356,12 +363,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.line,
   },
   heroNumber: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 30,
     color: Colors.oxblood,
   },
   heroNumberSmall: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 30,
     color: Colors.ink,
   },
