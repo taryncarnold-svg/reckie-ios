@@ -545,7 +545,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
               <Text style={styles.composeTitle}>Reckie {rec.title}</Text>
               <Text style={styles.composeHint}>
                 Your take — like a text to a friend. It joins {isOwner ? 'the' : `${displayName(owner)}’s`}{' '}
-                co-sign stack and lands on your shelf.
+                vouch stack and lands on your shelf.
               </Text>
               <BottomSheetTextInput
                 style={styles.composeInput}
@@ -564,7 +564,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                 {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.savePrimaryText}>Reckie it</Text>}
               </PressableScale>
               <PressableScale style={styles.composeSecondary} haptic="selection" onPress={submitCosignOnly} disabled={busy}>
-                <Text style={styles.composeSecondaryText}>Just co-sign, don’t add to my shelf</Text>
+                <Text style={styles.composeSecondaryText}>Just vouch, don’t add to my shelf</Text>
               </PressableScale>
               <PressableScale
                 style={styles.composeCancel}

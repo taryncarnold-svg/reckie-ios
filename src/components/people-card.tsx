@@ -49,7 +49,7 @@ export function PeopleCard({ member, currentUserId, onPress }: Props) {
           </Text>
         ) : null}
         <Text style={styles.meta} numberOfLines={1}>
-          {member.cosign_count > 0 ? `${member.cosign_count} co-signs · ` : ''}
+          {member.cosign_count > 0 ? `${member.cosign_count} vouches · ` : ''}
           {member.rec_count} {member.rec_count === 1 ? 'reckie' : 'reckies'}
         </Text>
       </View>

@@ -109,7 +109,7 @@ export default function HomeScreen() {
         <View style={styles.heroRow}>
           <View style={styles.heroBlock}>
             <Text style={styles.heroNumber}>{cosignsEarned}</Text>
-            <Text style={styles.heroLabel}>co-signs earned</Text>
+            <Text style={styles.heroLabel}>vouches earned</Text>
           </View>
           <View style={styles.heroDivider} />
           <View style={styles.heroBlock}>
@@ -197,7 +197,7 @@ function PulseRow({ item, last, onPress }: { item: PulseItem; last: boolean; onP
       <View style={styles.pulseBody}>
         <Text style={styles.pulseText} numberOfLines={2}>
           <Text style={styles.pulseWho}>{who}</Text>
-          {payoff ? ' co-signed your ' : ' reckied '}
+          {payoff ? ' vouched for your ' : ' reckied '}
           <Text style={styles.pulseTitle}>{item.rec.title}</Text>
         </Text>
         {payoff && <Text style={styles.payoffMark}>✺ your taste, traveling</Text>}

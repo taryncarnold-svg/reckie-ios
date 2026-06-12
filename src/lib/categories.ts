@@ -63,6 +63,35 @@ export function normalizeCityKey(city: string): string {
 
 export type CityGroup = { city: string; recs: Rec[] };
 
+/** Circle Browse category pills (PRODUCT.md §14.3). */
+export type CircleBrowseFilter = 'all' | 'watch' | 'listen' | 'read' | 'places' | 'play';
+
+export const CIRCLE_BROWSE_FILTERS: { id: CircleBrowseFilter; label: string; emoji?: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'watch', label: 'Watch', emoji: '🎬' },
+  { id: 'listen', label: 'Listen', emoji: '🎧' },
+  { id: 'read', label: 'Read', emoji: '📚' },
+  { id: 'places', label: 'Places', emoji: '📍' },
+  { id: 'play', label: 'Play', emoji: '🎮' },
+];
+
+export function recMatchesBrowseFilter(rec: Rec, filter: CircleBrowseFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'places') return isLocationCategory(rec.category);
+  return rec.category === filter;
+}
+
+export function browseFilterLabel(filter: CircleBrowseFilter): string {
+  return CIRCLE_BROWSE_FILTERS.find((f) => f.id === filter)?.label ?? 'All';
+}
+
+export const LOCATION_CATEGORIES_LIST: Category[] = ['eat', 'drink', 'do'];
+
+export function locationCategoryLabel(category: Category): string {
+  const labels: Record<string, string> = { eat: 'Restaurants', drink: 'Bars', do: 'Things to Do' };
+  return labels[category] ?? category;
+}
+
 export function groupRecsByCity(recs: Rec[]): CityGroup[] {
   const groups = new Map<string, CityGroup>();
   for (const rec of recs) {

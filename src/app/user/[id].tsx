@@ -105,7 +105,7 @@ export default function UserProfileScreen() {
         <View style={styles.heroRow}>
           <View style={styles.heroBlock}>
             <Text style={styles.heroNumber}>{cosignsEarned}</Text>
-            <Text style={styles.heroLabel}>co-signs earned</Text>
+            <Text style={styles.heroLabel}>vouches earned</Text>
           </View>
           <View style={styles.heroDivider} />
           <View style={styles.heroBlock}>

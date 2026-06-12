@@ -4,8 +4,16 @@ import { CityTile } from '@/components/city-tile';
 import { ReckieCard } from '@/components/reckie-card';
 import { SectionHeading } from '@/components/section-heading';
 import { TopThreeInSection } from '@/components/top-three-in-section';
+import { TopThreeRankInvite } from '@/components/top-three-rank-invite';
 import { Colors, Fonts } from '@/constants/theme';
-import { TOP_SHELVES, groupRecsByCity, type CityGroup } from '@/lib/categories';
+import { TOP_LIST_LABELS } from '@/lib/data';
+import {
+  LOCATION_CATEGORIES_LIST,
+  TOP_SHELVES,
+  groupRecsByCity,
+  locationCategoryLabel,
+  type CityGroup,
+} from '@/lib/categories';
 import type { Category, Rec, TopListWithRecs } from '@/lib/types';
 
 const H_PAD = 20;
@@ -15,7 +23,6 @@ const TOP_THREE_MIN = 3;
 type Props = {
   recs: Rec[];
   topLists?: TopListWithRecs[];
-  /** Display name for "Taryn's Top 3" label on other profiles. */
   profileName?: string;
   isOwnProfile?: boolean;
   ownerNames?: Record<string, string>;
@@ -41,13 +48,46 @@ function topListForCategory(topLists: TopListWithRecs[] | undefined, category: C
   return topLists?.find((entry) => entry.list.category === category);
 }
 
-function shouldShowTop3(shelfRecCount: number, entry: TopListWithRecs | undefined): entry is TopListWithRecs {
-  return shelfRecCount >= TOP_THREE_MIN && !!entry && entry.recs.length > 0;
+function renderTop3Block(
+  category: Category,
+  catRecs: Rec[],
+  topLists: TopListWithRecs[] | undefined,
+  top3LabelText: string,
+  isOwnProfile: boolean | undefined,
+  onPressRec?: (rec: Rec) => void,
+  onSeeAllTop3?: (category: Category) => void
+) {
+  if (catRecs.length < TOP_THREE_MIN) return null;
+
+  const topEntry = topListForCategory(topLists, category);
+  const hasList = !!topEntry && topEntry.recs.length > 0;
+
+  if (hasList) {
+    return (
+      <TopThreeInSection
+        label={top3LabelText}
+        recs={topEntry.recs}
+        onPressRec={onPressRec}
+        onSeeAll={isOwnProfile ? () => onSeeAllTop3?.(category) : undefined}
+      />
+    );
+  }
+
+  if (isOwnProfile) {
+    return (
+      <TopThreeRankInvite
+        categoryLabel={locationCategoryLabel(category)}
+        onPress={() => onSeeAllTop3?.(category)}
+      />
+    );
+  }
+
+  return null;
 }
 
 /**
  * Catalogue: horizontal-scroll rows per category. Top 3 lives inside each
- * section when the category has 3+ reckies and a ranked list exists.
+ * section when the category has 3+ reckies.
  */
 export function CategorizedShelves({
   recs,
@@ -81,6 +121,16 @@ export function CategorizedShelves({
           <View style={styles.sectionPad}>
             <SectionHeading title="Places" count={cityGroups.length} />
           </View>
+          <View style={styles.sectionPad}>
+            {LOCATION_CATEGORIES_LIST.map((cat) => {
+              const catRecs = recs.filter((r) => r.category === cat);
+              return (
+                <View key={cat}>
+                  {renderTop3Block(cat, catRecs, topLists, top3LabelText, isOwnProfile, onPressRec, onSeeAllTop3)}
+                </View>
+              );
+            })}
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -99,8 +149,9 @@ export function CategorizedShelves({
 
         const category = shelf.categories[0];
         const topEntry = topListForCategory(topLists, category);
-        const showTop3 = shouldShowTop3(shelfRecs.length, topEntry);
-        const rankedIds = showTop3 ? new Set(topEntry.recs.slice(0, 3).map((r) => r.id)) : new Set<string>();
+        const hasList = !!topEntry && topEntry.recs.length > 0;
+        const showTop3 = shelfRecs.length >= TOP_THREE_MIN && hasList;
+        const rankedIds = showTop3 ? new Set(topEntry!.recs.slice(0, 3).map((r) => r.id)) : new Set<string>();
         const scrollRecs = showTop3 ? shelfRecs.filter((rec) => !rankedIds.has(rec.id)) : shelfRecs;
 
         return (
@@ -109,16 +160,21 @@ export function CategorizedShelves({
               <SectionHeading title={shelf.label} count={shelfRecs.length} />
             </View>
 
-            {showTop3 && (
-              <View style={styles.sectionPad}>
+            <View style={styles.sectionPad}>
+              {showTop3 ? (
                 <TopThreeInSection
                   label={top3LabelText}
-                  recs={topEntry.recs}
+                  recs={topEntry!.recs}
                   onPressRec={onPressRec}
                   onSeeAll={isOwnProfile ? () => onSeeAllTop3?.(category) : undefined}
                 />
-              </View>
-            )}
+              ) : shelfRecs.length >= TOP_THREE_MIN && isOwnProfile ? (
+                <TopThreeRankInvite
+                  categoryLabel={TOP_LIST_LABELS[category]}
+                  onPress={() => onSeeAllTop3?.(category)}
+                />
+              ) : null}
+            </View>
 
             {scrollRecs.length > 0 && (
               <ScrollView

@@ -1,29 +1,32 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Avatar } from '@/components/avatar';
+import { CircleBrowseRow } from '@/components/circle-browse-row';
+import { CircleClassicHero } from '@/components/circle-classic-hero';
 import { BlurHeader, useHeaderHeight } from '@/components/blur-header';
 import { PeopleCard } from '@/components/people-card';
 import { PressableScale } from '@/components/pressable-scale';
 import { useReckieDetail } from '@/components/reckie-detail-sheet';
-import { SegmentedTabs } from '@/components/segmented-tabs';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
-import { CATEGORY_EMOJI } from '@/lib/categories';
 import {
-  fetchFollowingActivity,
+  CIRCLE_BROWSE_FILTERS,
+  recMatchesBrowseFilter,
+  type CircleBrowseFilter,
+} from '@/lib/categories';
+import {
+  CLASSIC_MIN_VOUCHES,
+  fetchCircleBrowse,
   fetchPeopleDirectory,
   filterPeople,
-  type ActivityItem,
+  type CircleBrowseItem,
   type PeopleMember,
 } from '@/lib/data';
 import { useDataChanged } from '@/lib/refresh';
-import { getRecImageUrl } from '@/lib/types';
 
-type SubTab = 'activity' | 'people';
+type Lens = 'browse' | 'people';
 
 export default function CircleScreen() {
   const { session } = useAuth();
@@ -31,8 +34,9 @@ export default function CircleScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { openReckie } = useReckieDetail();
 
-  const [subTab, setSubTab] = useState<SubTab>('activity');
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [lens, setLens] = useState<Lens>('browse');
+  const [browseFilter, setBrowseFilter] = useState<CircleBrowseFilter>('all');
+  const [browseItems, setBrowseItems] = useState<CircleBrowseItem[]>([]);
   const [people, setPeople] = useState<PeopleMember[]>([]);
   const [peopleQuery, setPeopleQuery] = useState('');
   const [loaded, setLoaded] = useState(false);
@@ -42,11 +46,8 @@ export default function CircleScreen() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const [feed, directory] = await Promise.all([
-      fetchFollowingActivity(userId),
-      fetchPeopleDirectory(userId),
-    ]);
-    setActivity(feed);
+    const [items, directory] = await Promise.all([fetchCircleBrowse(userId), fetchPeopleDirectory(userId)]);
+    setBrowseItems(items);
     setPeople(directory);
     setLoaded(true);
   }, [userId]);
@@ -63,8 +64,16 @@ export default function CircleScreen() {
     setRefreshing(false);
   }, [load]);
 
+  const followingCount = people.filter((m) => m.is_following).length;
   const visiblePeople = filterPeople(people, peopleQuery);
-  const followingCount = people.filter((member) => member.is_following).length;
+
+  const filteredBrowse = useMemo(
+    () => browseItems.filter((item) => recMatchesBrowseFilter(item.rec, browseFilter)),
+    [browseItems, browseFilter]
+  );
+
+  const classics = filteredBrowse.filter((item) => item.vouchCount >= CLASSIC_MIN_VOUCHES);
+  const rest = filteredBrowse.filter((item) => item.vouchCount < CLASSIC_MIN_VOUCHES);
 
   return (
     <View style={styles.screen}>
@@ -72,88 +81,106 @@ export default function CircleScreen() {
         contentContainerStyle={{
           paddingTop: headerHeight + 20,
           paddingBottom: tabBarHeight + 32,
-          paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={headerHeight} />
         }>
-        <Text style={styles.heading}>Circle</Text>
-        <Text style={styles.subtitle}>
-          {followingCount > 0
-            ? `Following ${followingCount} ${followingCount === 1 ? 'person' : 'people'}`
-            : 'Follow people to fill your feed'}
-        </Text>
+        <View style={styles.headerPad}>
+          <Text style={styles.heading}>Circle</Text>
+          <Text style={styles.subtitle}>
+            {followingCount > 0
+              ? `${followingCount} ${followingCount === 1 ? 'person' : 'people'} · what they swear by`
+              : 'Follow people to see what they swear by'}
+          </Text>
 
-        <View style={styles.tabs}>
-          <SegmentedTabs
-            options={[
-              { id: 'activity', label: 'Activity' },
-              { id: 'people', label: 'People' },
-            ]}
-            value={subTab}
-            onChange={setSubTab}
-          />
+          <View style={styles.lensRow}>
+            {(['browse', 'people'] as Lens[]).map((opt) => (
+              <PressableScale
+                key={opt}
+                style={[styles.lensPill, lens === opt && styles.lensPillOn]}
+                haptic="selection"
+                onPress={() => setLens(opt)}>
+                <Text style={[styles.lensText, lens === opt && styles.lensTextOn]}>
+                  {opt === 'browse' ? 'Browse' : 'People'}
+                </Text>
+              </PressableScale>
+            ))}
+          </View>
         </View>
 
-        {subTab === 'activity' ? (
-          activity.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>{loaded ? 'Nothing here yet' : 'Loading…'}</Text>
-              {loaded && (
+        {lens === 'browse' ? (
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.catRow}
+              decelerationRate="fast">
+              {CIRCLE_BROWSE_FILTERS.map((cat) => (
+                <PressableScale
+                  key={cat.id}
+                  style={[styles.catPill, browseFilter === cat.id && styles.catPillOn]}
+                  haptic="selection"
+                  onPress={() => setBrowseFilter(cat.id)}>
+                  <Text style={[styles.catText, browseFilter === cat.id && styles.catTextOn]}>
+                    {cat.emoji ? `${cat.emoji} ` : ''}
+                    {cat.label}
+                  </Text>
+                </PressableScale>
+              ))}
+            </ScrollView>
+
+            {!loaded ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTitle}>Loading…</Text>
+              </View>
+            ) : filteredBrowse.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTitle}>Nothing here yet</Text>
                 <Text style={styles.emptyHint}>
                   Follow people in the People tab and their reckies will show up here.
                 </Text>
-              )}
-            </View>
-          ) : (
-            <View style={styles.feed}>
-              {activity.map((item) => {
-                const imageUrl = getRecImageUrl(item.rec);
-                const reckiedBy = item.profile.name ?? item.profile.handle ?? 'Someone';
-                return (
-                  <PressableScale
-                    key={item.rec.id}
-                    style={styles.activityCard}
-                    haptic="light"
-                    onPress={() => openReckie({ rec: item.rec, onChanged: load })}>
-                    <View style={styles.activityThumb}>
-                      {imageUrl ? (
-                        <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                      ) : (
-                        <View style={styles.activityThumbFallback}>
-                          <Text style={styles.activityEmoji}>{CATEGORY_EMOJI[item.rec.category]}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.activityText}>
-                      <Text style={styles.activityTitle} numberOfLines={1}>
-                        {item.rec.title}
-                      </Text>
-                      {item.rec.note ? (
-                        <Text style={styles.activityNote} numberOfLines={2}>
-                          “{item.rec.note.trim()}”
-                        </Text>
-                      ) : null}
-                      <View style={styles.activityByline}>
-                        <Avatar profile={item.profile} size={16} />
-                        <Text style={styles.activityBy} numberOfLines={1}>
-                          Reckied by {reckiedBy}
-                        </Text>
-                      </View>
-                    </View>
-                  </PressableScale>
-                );
-              })}
-            </View>
-          )
+              </View>
+            ) : (
+              <View>
+                {classics.length > 0 && (
+                  <View style={styles.sectionPad}>
+                    <Text style={styles.sectionLabelGold}>★ Circle {classics.length === 1 ? 'classic' : 'classics'}</Text>
+                    {classics.map((item) => (
+                      <CircleClassicHero
+                        key={item.canonicalKey}
+                        item={item}
+                        onPress={(rec) => openReckie({ rec, onChanged: load })}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {rest.length > 0 && (
+                  <View style={styles.sectionPad}>
+                    <Text style={styles.sectionLabel}>
+                      {classics.length > 0 ? 'Most loved right now' : 'From your circle'}
+                    </Text>
+                    {rest.map((item) => (
+                      <CircleBrowseRow
+                        key={item.canonicalKey}
+                        item={item}
+                        showCategory={browseFilter === 'all'}
+                        onPress={(rec) => openReckie({ rec, onChanged: load })}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </>
         ) : (
-          <View style={styles.peopleList}>
+          <View style={styles.sectionPad}>
             <TextInput
               style={styles.searchInput}
               placeholder="Search people by name or @handle"
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={Colors.ink3}
               value={peopleQuery}
               onChangeText={setPeopleQuery}
               autoCapitalize="none"
@@ -188,77 +215,93 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.paper,
   },
+  headerPad: {
+    paddingHorizontal: 20,
+  },
   heading: {
     fontFamily: Fonts.displayMedium,
-    fontSize: 28,
+    fontSize: 30,
+    letterSpacing: -0.6,
     color: Colors.ink,
   },
   subtitle: {
-    marginTop: 4,
+    marginTop: 2,
     fontFamily: Fonts.sans,
+    fontSize: 13,
+    color: Colors.ink3,
+  },
+  lensRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 4,
+  },
+  lensPill: {
+    paddingHorizontal: 15,
+    paddingVertical: 7,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.buttonBorder,
+  },
+  lensPillOn: {
+    backgroundColor: Colors.ink,
+    borderColor: Colors.ink,
+  },
+  lensText: {
+    fontFamily: Fonts.sansSemiBold,
     fontSize: 13.5,
     color: Colors.ink2,
   },
-  tabs: {
-    marginTop: 16,
-    marginBottom: 20,
+  lensTextOn: {
+    color: '#fff',
   },
-  feed: {
-    gap: 12,
-  },
-  activityCard: {
+  catRow: {
     flexDirection: 'row',
-    gap: 12,
-    backgroundColor: Colors.white,
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  catPill: {
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: Radii.pill,
+    backgroundColor: '#F1ECE3',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.line2,
-    borderRadius: Radii.lg,
-    padding: 12,
   },
-  activityThumb: {
-    width: 64,
-    height: 64,
-    borderRadius: Radii.md,
-    overflow: 'hidden',
-    backgroundColor: Colors.lineSoft,
+  catPillOn: {
+    backgroundColor: Colors.oxblood,
+    borderColor: Colors.oxblood,
   },
-  activityThumbFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  catText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    color: Colors.ink2,
   },
-  activityEmoji: {
-    fontSize: 22,
+  catTextOn: {
+    color: '#fff',
   },
-  activityText: {
-    flex: 1,
-    gap: 3,
+  sectionPad: {
+    paddingHorizontal: 20,
   },
-  activityTitle: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 15.5,
-    color: Colors.ink,
-  },
-  // Notes stay Inter — human voice without serif pull-quote styling.
-  activityNote: {
-    fontFamily: Fonts.sans,
-    fontSize: 13.5,
-    lineHeight: 19,
-    color: Colors.noteText,
-  },
-  activityByline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 2,
-  },
-  activityBy: {
-    fontFamily: Fonts.sans,
+  sectionLabelGold: {
+    fontFamily: Fonts.sansBold,
     fontSize: 12,
-    color: Colors.ink3,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: Colors.marigoldDeep,
+    marginBottom: 10,
+    marginTop: 4,
   },
-  peopleList: {
-    gap: 4,
+  sectionLabel: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 12,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: Colors.ink3,
+    marginBottom: 4,
+    marginTop: 8,
   },
   searchInput: {
     backgroundColor: Colors.paper,
@@ -276,10 +319,10 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   emptyTitle: {
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMedium,
     fontSize: 19,
     color: Colors.ink,
   },

@@ -522,6 +522,77 @@ export async function fetchPulse(
 }
 
 // ============================================================
+// Circle Browse (PRODUCT.md §14.3): content-first circle lens
+// ============================================================
+
+export type CircleBrowseItem = {
+  canonicalKey: string;
+  rec: Rec;
+  /** Distinct people in your circle who reckied this thing. */
+  reckoners: Profile[];
+  vouchCount: number;
+  quote: string | null;
+};
+
+export const CLASSIC_MIN_VOUCHES = 3;
+
+export function formatReckonerNames(profiles: Profile[], max = 4): string {
+  const names = profiles.map((p) => p.name ?? p.handle ?? 'Someone').slice(0, max);
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} & ${names[1]}`;
+  if (names.length === 3) return `${names[0]}, ${names[1]} & ${names[2]}`;
+  const rest = profiles.length - 3;
+  return rest > 0
+    ? `${names[0]}, ${names[1]}, ${names[2]} & ${rest} more`
+    : `${names[0]}, ${names[1]} & ${names[2]}`;
+}
+
+/** Aggregate circle reckies by canonical thing; sort most-vouched first. */
+export async function fetchCircleBrowse(userId: string): Promise<CircleBrowseItem[]> {
+  const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+  const followingIds = follows?.map((f) => f.following_id) ?? [];
+  if (followingIds.length === 0) return [];
+
+  const [{ data: recs }, { data: profiles }] = await Promise.all([
+    supabase.from('recs').select('*').in('user_id', followingIds).order('created_at', { ascending: false }),
+    supabase.from('profiles').select('*').in('id', followingIds),
+  ]);
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p as Profile]));
+  const groups = new Map<
+    string,
+    { rec: Rec; profiles: Map<string, Profile>; notes: string[] }
+  >();
+
+  for (const rec of (recs ?? []) as Rec[]) {
+    const profile = profileMap.get(rec.user_id);
+    if (!profile) continue;
+    const key = canonicalKeyForRec(rec);
+    let group = groups.get(key);
+    if (!group) {
+      group = { rec, profiles: new Map(), notes: [] };
+      groups.set(key, group);
+    }
+    group.profiles.set(profile.id, profile);
+    if (rec.note?.trim()) group.notes.push(rec.note.trim());
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      canonicalKey: canonicalKeyForRec(group.rec),
+      rec: group.rec,
+      reckoners: [...group.profiles.values()],
+      vouchCount: group.profiles.size,
+      quote: group.notes.sort((a, b) => b.length - a.length)[0] ?? null,
+    }))
+    .sort(
+      (a, b) =>
+        b.vouchCount - a.vouchCount || b.rec.created_at.localeCompare(a.rec.created_at)
+    );
+}
+
+// ============================================================
 // Search (people + reckies)
 // ============================================================
 

@@ -97,7 +97,7 @@ export default function SearchScreen() {
                   </Text>
                   <Text style={styles.rowMeta} numberOfLines={1}>
                     {member.rec_count} {member.rec_count === 1 ? 'reckie' : 'reckies'}
-                    {member.cosign_count > 0 ? ` · ${member.cosign_count} co-signs` : ''}
+                    {member.cosign_count > 0 ? ` · ${member.cosign_count} vouches` : ''}
                   </Text>
                 </View>
               </PressableScale>
