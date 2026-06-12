@@ -14,6 +14,7 @@ import { Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { CATEGORY_EMOJI } from '@/lib/categories';
 import { searchEverything, type SearchResults } from '@/lib/data';
+import { SEARCH_INPUT_PROPS } from '@/lib/text-input-props';
 import { getRecImageUrl } from '@/lib/types';
 
 /** Search (PRODUCT.md §4): people and reckies across the catalogue. */
@@ -74,10 +75,9 @@ export default function SearchScreen() {
             placeholderTextColor={Colors.ink3}
             value={query}
             onChangeText={setQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
             returnKeyType="search"
             onSubmitEditing={Keyboard.dismiss}
+            {...SEARCH_INPUT_PROPS}
           />
         </View>
 

@@ -624,6 +624,53 @@ export async function searchEverything(userId: string, query: string): Promise<S
   return { people, reckies };
 }
 
+export type ReachCity = {
+  city: string;
+  count: number;
+  recs: Rec[];
+};
+
+/** Cities where the user's reckies have spread (lineage + canonical group). */
+export async function fetchReachSpread(userId: string): Promise<{
+  cities: ReachCity[];
+  totalSpread: number;
+  seedCount: number;
+}> {
+  const { data: mine } = await supabase.from('recs').select('*').eq('user_id', userId);
+  const myRecs = (mine ?? []) as Rec[];
+  if (myRecs.length === 0) return { cities: [], totalSpread: 0, seedCount: 0 };
+
+  const myIds = myRecs.map((r) => r.id);
+  const canonicalKeys = [...new Set(myRecs.map((r) => canonicalKeyForRec(r)))];
+
+  const [{ data: byCanonical }, { data: bySource }] = await Promise.all([
+    supabase.from('recs').select('*').in('canonical_id', canonicalKeys).neq('user_id', userId),
+    supabase.from('recs').select('*').in('source_reckie_id', myIds).neq('user_id', userId),
+  ]);
+
+  const spreadMap = new Map<string, Rec>();
+  for (const row of [...(byCanonical ?? []), ...(bySource ?? [])]) {
+    spreadMap.set(row.id, row as Rec);
+  }
+  const spreadRecs = [...spreadMap.values()];
+
+  const cityGroups = new Map<string, Rec[]>();
+  for (const rec of spreadRecs) {
+    const city = rec.city?.trim();
+    if (!city) continue;
+    const key = city.toLowerCase();
+    const list = cityGroups.get(key) ?? [];
+    list.push(rec);
+    cityGroups.set(key, list);
+  }
+
+  const cities = [...cityGroups.entries()]
+    .map(([, recs]) => ({ city: recs[0].city!.trim(), count: recs.length, recs }))
+    .sort((a, b) => b.count - a.count);
+
+  return { cities, totalSpread: spreadRecs.length, seedCount: myRecs.length };
+}
+
 /** The lineage chain above a reckie, walking source_reckie_id to the originator. */
 export async function fetchLineage(rec: Rec, maxDepth = 10): Promise<{ rec: Rec; profile: Profile | null }[]> {
   const chain: { rec: Rec; profile: Profile | null }[] = [];

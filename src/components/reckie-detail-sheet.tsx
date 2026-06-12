@@ -37,6 +37,8 @@ import {
   unmarkTried,
 } from '@/lib/data';
 import { notifyDataChanged } from '@/lib/refresh';
+import { NOTE_INPUT_PROPS } from '@/lib/text-input-props';
+import { displayTagsForRec, getRecSmartActions } from '@/lib/rec-display';
 import { supabase } from '@/lib/supabase';
 import { getRecImageUrl, type CosignWithProfile, type Profile, type Rec, type Tried } from '@/lib/types';
 
@@ -77,13 +79,6 @@ function contextLine(rec: Rec): string | null {
   if (rec.metadata?.watch_provider) parts.push(String(rec.metadata.watch_provider));
   if (rec.city && !parts.length) parts.push(rec.city);
   return parts.length ? parts.join(' · ') : null;
-}
-
-function externalScore(rec: Rec): string | null {
-  if (rec.external_rating_label && rec.external_rating_value) {
-    return `${rec.external_rating_label} ${rec.external_rating_value}`;
-  }
-  return null;
 }
 
 function displayName(profile: Profile | null): string {
@@ -305,12 +300,12 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
   const posterWidth = isPlace ? SCREEN_WIDTH - 40 : POSTER_WIDTH;
   const posterHeight = posterWidth / aspectRatio;
   const heroHeight = isPlace ? posterHeight + 72 : 400;
-  const score = rec ? externalScore(rec) : null;
   const context = rec ? contextLine(rec) : null;
   const otherCosigns = cosigns.filter((c) => c.user_id !== rec?.user_id);
   const alreadyCosigned = !!userId && cosigns.some((c) => c.user_id === userId);
   const cosignLine = formatCosignLine(otherCosigns);
-  const tagList = rec ? [...(rec.tags ?? []), ...(score ? [score] : [])] : [];
+  const tagList = rec ? displayTagsForRec(rec) : [];
+  const smartActions = rec ? getRecSmartActions(rec) : { primary: null, secondary: null };
 
   return (
     <ReckieDetailContext.Provider value={{ openReckie }}>
@@ -460,14 +455,14 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                         </Text>
                       </PressableScale>
 
-                      <View style={rec.primary_action_url ? styles.secRow : undefined}>
-                        {rec.primary_action_url ? (
+                      <View style={smartActions.primary ? styles.secRow : undefined}>
+                        {smartActions.primary ? (
                           <PressableScale
                             style={styles.secBtn}
                             haptic="light"
-                            onPress={() => Linking.openURL(rec.primary_action_url!)}>
+                            onPress={() => Linking.openURL(smartActions.primary!.url)}>
                             <Text style={styles.secBtnText} numberOfLines={1}>
-                              ▶ {rec.primary_action_label ?? 'Open'}
+                              ▶ {smartActions.primary.label}
                             </Text>
                           </PressableScale>
                         ) : null}
@@ -475,7 +470,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                           style={[
                             styles.secBtn,
                             styles.reckieBtn,
-                            !rec.primary_action_url && { flex: undefined, width: '100%' },
+                            !smartActions.primary && { flex: undefined, width: '100%' },
                             alreadyCosigned && styles.reckieBtnOn,
                           ]}
                           haptic="light"
@@ -497,12 +492,12 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                     </>
                   )}
 
-                  {isOwner && rec.primary_action_url && (
+                  {isOwner && smartActions.primary && (
                     <PressableScale
                       style={styles.savePrimary}
                       haptic="medium"
-                      onPress={() => Linking.openURL(rec.primary_action_url!)}>
-                      <Text style={styles.savePrimaryText}>▶ {rec.primary_action_label ?? 'Open'}</Text>
+                      onPress={() => Linking.openURL(smartActions.primary!.url)}>
+                      <Text style={styles.savePrimaryText}>▶ {smartActions.primary.label}</Text>
                     </PressableScale>
                   )}
 
@@ -533,6 +528,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                       onChangeText={setTriedNote}
                       onEndEditing={() => updateTriedDetails(tried.loved ?? null, triedNote)}
                       multiline
+                      {...NOTE_INPUT_PROPS}
                     />
                   </View>
                 )}
@@ -555,6 +551,7 @@ export function ReckieDetailProvider({ children }: { children: ReactNode }) {
                 onChangeText={setTake}
                 multiline
                 autoFocus
+                {...NOTE_INPUT_PROPS}
               />
               <PressableScale
                 style={[styles.savePrimary, !take.trim() && styles.savePrimaryDisabled]}

@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/pressable-scale';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { EMAIL_INPUT_PROPS, OTP_INPUT_PROPS } from '@/lib/text-input-props';
 
 const redirectTo = makeRedirectUri();
 const OTP_TYPES = ['email', 'magiclink', 'signup'] as const;
@@ -130,13 +131,11 @@ export default function LoginScreen() {
               placeholderTextColor={Colors.ink3}
               value={code}
               onChangeText={setCode}
-              keyboardType="number-pad"
-              textContentType="oneTimeCode"
-              autoComplete="one-time-code"
               maxLength={8}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={verifyCode}
+              {...OTP_INPUT_PROPS}
             />
             <PressableScale
               style={styles.cta}
@@ -214,12 +213,9 @@ export default function LoginScreen() {
                   placeholderTextColor="#B5AFA4"
                   value={email}
                   onChangeText={setEmail}
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  autoCorrect={false}
                   returnKeyType="go"
                   onSubmitEditing={sendMagicLink}
+                  {...EMAIL_INPUT_PROPS}
                 />
               ) : (
                 <View style={styles.field}>

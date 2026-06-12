@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { PressableScale } from '@/components/pressable-scale';
 import { CategoryTints, Colors, Fonts, Radii } from '@/constants/theme';
 import { aspectRatioForCategory, catalogueTileWidth, isLocationCategory } from '@/lib/categories';
+import { extractDisplayTags } from '@/lib/rec-display';
 import { getRecImageUrl, type Rec } from '@/lib/types';
 
 type Props = {
@@ -25,6 +26,7 @@ export function ReckieCard({ rec, width, reckiedBy, onPress }: Props) {
   const imageUrl = getRecImageUrl(rec);
   const tint = CategoryTints[rec.category];
   const place = isLocationCategory(rec.category);
+  const tags = extractDisplayTags(rec).slice(0, 2);
 
   return (
     <PressableScale style={{ width: tileWidth }} onPress={onPress} haptic="light">
@@ -40,6 +42,17 @@ export function ReckieCard({ rec, width, reckiedBy, onPress }: Props) {
         ) : (
           <LinearGradient colors={[tint, '#36493D']} style={StyleSheet.absoluteFill} />
         )}
+        {tags.length > 0 ? (
+          <View style={styles.tagRow}>
+            {tags.map((tag) => (
+              <View key={tag} style={styles.tagChip}>
+                <Text style={styles.tagText} numberOfLines={1}>
+                  {tag}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </View>
       <Text style={[styles.title, place && styles.titlePlace]} numberOfLines={2}>
         {rec.title}
@@ -62,6 +75,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 7,
     shadowOffset: { width: 0, height: 2 },
+  },
+  tagRow: {
+    position: 'absolute',
+    left: 6,
+    bottom: 6,
+    right: 6,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  tagChip: {
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 20,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    maxWidth: '100%',
+  },
+  tagText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 9,
+    color: Colors.ink,
   },
   title: {
     marginTop: 8,

@@ -92,6 +92,55 @@ export function locationCategoryLabel(category: Category): string {
   return labels[category] ?? category;
 }
 
+export type CatalogueSubsection = { id: string; label: string; match: (rec: Rec) => boolean };
+
+function watchIsMovie(rec: Rec): boolean {
+  const t = String(rec.metadata?.type ?? '').toLowerCase();
+  return t === 'movie' || t === 'film' || t === 'video';
+}
+
+function watchIsShow(rec: Rec): boolean {
+  const t = String(rec.metadata?.type ?? '').toLowerCase();
+  return t === 'series' || t === 'show' || t === 'tv';
+}
+
+export function subsectionsForShelf(shelfId: TopShelfId): CatalogueSubsection[] | null {
+  switch (shelfId) {
+    case 'watch':
+      return [
+        { id: 'shows', label: 'Shows', match: (rec) => watchIsShow(rec) || !watchIsMovie(rec) },
+        { id: 'movies', label: 'Movies', match: (rec) => watchIsMovie(rec) },
+      ];
+    case 'listen':
+      return [
+        { id: 'music', label: 'Music', match: (rec) => String(rec.metadata?.type ?? '').toLowerCase() !== 'podcast' },
+        { id: 'podcasts', label: 'Podcasts', match: (rec) => String(rec.metadata?.type ?? '').toLowerCase() === 'podcast' },
+      ];
+    case 'read':
+      return [
+        { id: 'books', label: 'Books', match: (rec) => String(rec.metadata?.type ?? '').toLowerCase() !== 'article' },
+        { id: 'articles', label: 'Articles', match: (rec) => String(rec.metadata?.type ?? '').toLowerCase() === 'article' },
+      ];
+    default:
+      return null;
+  }
+}
+
+export function groupBrowseItemsByCity<T extends { rec: Rec }>(items: T[]): { city: string; items: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const city = item.rec.city?.trim();
+    if (!city) continue;
+    const key = normalizeCityKey(city);
+    const list = groups.get(key) ?? [];
+    list.push(item);
+    groups.set(key, list);
+  }
+  return [...groups.entries()]
+    .map(([, list]) => ({ city: list[0].rec.city!.trim(), items: list }))
+    .sort((a, b) => b.items.length - a.items.length);
+}
+
 export function groupRecsByCity(recs: Rec[]): CityGroup[] {
   const groups = new Map<string, CityGroup>();
   for (const rec of recs) {

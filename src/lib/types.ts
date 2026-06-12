@@ -113,10 +113,8 @@ export type TopListWithRecs = {
   recs: Rec[];
 };
 
+import { getRecImageUrl as resolveRecImageUrl } from './rec-display';
+
 export function getRecImageUrl(rec: Rec): string | null {
-  if (rec.image_url) return rec.image_url;
-  if (rec.cover_image_url) return rec.cover_image_url;
-  const m = rec.metadata;
-  if (!m) return null;
-  return (m.artwork_url as string) || (m.poster_url as string) || (m.poster as string) || null;
+  return resolveRecImageUrl(rec);
 }

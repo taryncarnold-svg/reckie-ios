@@ -12,6 +12,7 @@ import {
   TOP_SHELVES,
   groupRecsByCity,
   locationCategoryLabel,
+  subsectionsForShelf,
   type CityGroup,
 } from '@/lib/categories';
 import type { Category, Rec, TopListWithRecs } from '@/lib/types';
@@ -154,6 +155,16 @@ export function CategorizedShelves({
         const rankedIds = showTop3 ? new Set(topEntry!.recs.slice(0, 3).map((r) => r.id)) : new Set<string>();
         const scrollRecs = showTop3 ? shelfRecs.filter((rec) => !rankedIds.has(rec.id)) : shelfRecs;
 
+        const subsections = subsectionsForShelf(shelf.id);
+        const scrollSections = subsections
+          ? subsections
+              .map((sub) => ({
+                ...sub,
+                recs: scrollRecs.filter(sub.match),
+              }))
+              .filter((sub) => sub.recs.length > 0)
+          : [{ id: 'all', label: '', recs: scrollRecs }];
+
         return (
           <View key={shelf.id} style={styles.section}>
             <View style={styles.sectionPad}>
@@ -176,22 +187,31 @@ export function CategorizedShelves({
               ) : null}
             </View>
 
-            {scrollRecs.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.rowContent}
-                decelerationRate="fast">
-                {scrollRecs.map((rec) => (
-                  <ReckieCard
-                    key={rec.id}
-                    rec={rec}
-                    reckiedBy={ownerNames?.[rec.id] ?? selfLabel}
-                    onPress={() => onPressRec?.(rec)}
-                  />
-                ))}
-              </ScrollView>
-            )}
+            {scrollSections.map((sub) => (
+              <View key={sub.id}>
+                {sub.label ? (
+                  <View style={styles.sectionPad}>
+                    <Text style={styles.subsectionLabel}>{sub.label}</Text>
+                  </View>
+                ) : null}
+                {sub.recs.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.rowContent}
+                    decelerationRate="fast">
+                    {sub.recs.map((rec) => (
+                      <ReckieCard
+                        key={rec.id}
+                        rec={rec}
+                        reckiedBy={ownerNames?.[rec.id] ?? selfLabel}
+                        onPress={() => onPressRec?.(rec)}
+                      />
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
+            ))}
 
             <View style={styles.sectionDivider} />
           </View>
@@ -223,6 +243,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.line,
     marginHorizontal: H_PAD,
     marginTop: 14,
+  },
+  subsectionLabel: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13,
+    color: Colors.ink2,
+    marginBottom: 6,
   },
   empty: {
     paddingVertical: 56,

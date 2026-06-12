@@ -26,6 +26,7 @@ import {
   type SearchResult,
 } from '@/lib/search-api';
 import { supabase } from '@/lib/supabase';
+import { NOTE_INPUT_PROPS, SEARCH_INPUT_PROPS } from '@/lib/text-input-props';
 
 type Step = 'pick' | 'search' | 'note';
 
@@ -265,8 +266,8 @@ export const AddReckieSheet = forwardRef<AddReckieSheetRef>(function AddReckieSh
               value={query}
               onChangeText={setQuery}
               autoFocus
-              autoCorrect={false}
               returnKeyType="search"
+              {...SEARCH_INPUT_PROPS}
             />
           </View>
           <BottomSheetFlatList
@@ -320,8 +321,8 @@ export const AddReckieSheet = forwardRef<AddReckieSheetRef>(function AddReckieSh
               placeholderTextColor={Colors.muted}
               value={city}
               onChangeText={setCity}
+              {...NOTE_INPUT_PROPS}
               autoCapitalize="words"
-              autoCorrect={false}
             />
           )}
           <Text style={styles.noteHint}>Why do you reckie it? (This is the heart of it.)</Text>
@@ -333,6 +334,7 @@ export const AddReckieSheet = forwardRef<AddReckieSheetRef>(function AddReckieSh
             onChangeText={setNote}
             multiline
             autoFocus
+            {...NOTE_INPUT_PROPS}
           />
           <PressableScale style={styles.saveBtn} haptic="medium" onPress={save} disabled={saving}>
             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Save reckie</Text>}

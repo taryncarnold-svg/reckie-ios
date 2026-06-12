@@ -3,8 +3,9 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { CircleBrowseRow } from '@/components/circle-browse-row';
+import { CircleBrowseTile, CIRCLE_BROWSE_TILE_WIDTH } from '@/components/circle-browse-tile';
 import { CircleClassicHero } from '@/components/circle-classic-hero';
+import { CityTile } from '@/components/city-tile';
 import { BlurHeader, useHeaderHeight } from '@/components/blur-header';
 import { PeopleCard } from '@/components/people-card';
 import { PressableScale } from '@/components/pressable-scale';
@@ -13,6 +14,8 @@ import { Colors, Fonts, Radii } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import {
   CIRCLE_BROWSE_FILTERS,
+  groupBrowseItemsByCity,
+  isLocationCategory,
   recMatchesBrowseFilter,
   type CircleBrowseFilter,
 } from '@/lib/categories';
@@ -25,6 +28,8 @@ import {
   type PeopleMember,
 } from '@/lib/data';
 import { useDataChanged } from '@/lib/refresh';
+import { SEARCH_INPUT_PROPS } from '@/lib/text-input-props';
+import type { Rec } from '@/lib/types';
 
 type Lens = 'browse' | 'people';
 
@@ -74,6 +79,92 @@ export default function CircleScreen() {
 
   const classics = filteredBrowse.filter((item) => item.vouchCount >= CLASSIC_MIN_VOUCHES);
   const rest = filteredBrowse.filter((item) => item.vouchCount < CLASSIC_MIN_VOUCHES);
+
+  const openRec = (rec: Rec) => openReckie({ rec, onChanged: load });
+
+  const renderTileRow = (items: CircleBrowseItem[], label?: string) => (
+    <View key={label ?? 'row'} style={styles.tileSection}>
+      {label ? <Text style={styles.sectionLabel}>{label}</Text> : null}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tileRow}
+        decelerationRate="fast">
+        {items.map((item) => (
+          <CircleBrowseTile
+            key={item.canonicalKey}
+            rec={item.rec}
+            reckoners={item.reckoners}
+            vouchCount={item.vouchCount}
+            onPress={openRec}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+
+  const renderRestBrowse = () => {
+    if (rest.length === 0) return null;
+
+    const useCityFolders = browseFilter === 'places';
+    if (useCityFolders) {
+      const cityGroups = groupBrowseItemsByCity(rest);
+      const noCity = rest.filter((item) => !item.rec.city?.trim());
+      return (
+        <>
+          {cityGroups.map((group) => {
+            const coverRecs = group.items.map((i) => i.rec);
+            return (
+              <View key={group.city} style={styles.tileSection}>
+                <Text style={styles.cityFolderLabel}>{group.city}</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.tileRow}
+                  decelerationRate="fast">
+                  <CityTile
+                    group={{ city: group.city, recs: coverRecs }}
+                    width={CIRCLE_BROWSE_TILE_WIDTH * 1.35}
+                    onPress={() => {
+                      const first = group.items[0]?.rec;
+                      if (first) openRec(first);
+                    }}
+                  />
+                  {group.items.map((item) => (
+                    <CircleBrowseTile
+                      key={item.canonicalKey}
+                      rec={item.rec}
+                      reckoners={item.reckoners}
+                      vouchCount={item.vouchCount}
+                      onPress={openRec}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            );
+          })}
+          {noCity.length > 0 ? renderTileRow(noCity, 'Other places') : null}
+        </>
+      );
+    }
+
+    if (browseFilter === 'all') {
+      const places = rest.filter((item) => isLocationCategory(item.rec.category));
+      const media = rest.filter((item) => !isLocationCategory(item.rec.category));
+      return (
+        <>
+          {media.length > 0 ? renderTileRow(media, classics.length > 0 ? 'Most loved right now' : 'From your circle') : null}
+          {places.length > 0
+            ? groupBrowseItemsByCity(places).map((group) =>
+                renderTileRow(group.items, group.city)
+              )
+            : null}
+        </>
+      );
+    }
+
+    return renderTileRow(rest, classics.length > 0 ? 'Most loved right now' : 'From your circle');
+  };
 
   return (
     <View style={styles.screen}>
@@ -157,21 +248,7 @@ export default function CircleScreen() {
                   </View>
                 )}
 
-                {rest.length > 0 && (
-                  <View style={styles.sectionPad}>
-                    <Text style={styles.sectionLabel}>
-                      {classics.length > 0 ? 'Most loved right now' : 'From your circle'}
-                    </Text>
-                    {rest.map((item) => (
-                      <CircleBrowseRow
-                        key={item.canonicalKey}
-                        item={item}
-                        showCategory={browseFilter === 'all'}
-                        onPress={(rec) => openReckie({ rec, onChanged: load })}
-                      />
-                    ))}
-                  </View>
-                )}
+                {renderRestBrowse()}
               </View>
             )}
           </>
@@ -183,9 +260,8 @@ export default function CircleScreen() {
               placeholderTextColor={Colors.ink3}
               value={peopleQuery}
               onChangeText={setPeopleQuery}
-              autoCapitalize="none"
-              autoCorrect={false}
               clearButtonMode="while-editing"
+              {...SEARCH_INPUT_PROPS}
             />
             {visiblePeople.length === 0 ? (
               <View style={styles.empty}>
@@ -300,8 +376,26 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
     textTransform: 'uppercase',
     color: Colors.ink3,
-    marginBottom: 4,
+    marginBottom: 8,
     marginTop: 8,
+    paddingHorizontal: 20,
+  },
+  tileSection: {
+    marginBottom: 6,
+  },
+  tileRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  cityFolderLabel: {
+    fontFamily: Fonts.displayMedium,
+    fontSize: 17,
+    color: Colors.ink,
+    paddingHorizontal: 20,
+    marginBottom: 8,
+    marginTop: 4,
   },
   searchInput: {
     backgroundColor: Colors.paper,

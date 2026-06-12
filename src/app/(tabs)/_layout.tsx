@@ -8,7 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { AddReckieSheet, type AddReckieSheetRef } from '@/components/add-reckie-sheet';
 import { Colors, Fonts } from '@/constants/theme';
 
-/** Five slots (PRODUCT.md §4): Home · Circle · ＋ · Saved · Search. Map is NOT a tab. */
+/** Five slots: Home · Circle · ＋ · Saved · Reach. Search/map are hidden routes. */
 export default function TabLayout() {
   const addSheetRef = useRef<AddReckieSheetRef>(null);
 
@@ -85,12 +85,16 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="search"
+          name="reach"
           options={{
-            title: 'Search',
-            tabBarIcon: ({ color }) => <SymbolView name="magnifyingglass" size={22} tintColor={color} />,
+            title: 'Reach',
+            tabBarIcon: ({ color, focused }) => (
+              <SymbolView name={focused ? 'map.fill' : 'map'} size={22} tintColor={color} />
+            ),
           }}
         />
+        <Tabs.Screen name="search" options={{ href: null }} />
+        <Tabs.Screen name="map" options={{ href: null }} />
       </Tabs>
       <AddReckieSheet ref={addSheetRef} />
     </>
